@@ -661,14 +661,14 @@ export default function EditorArea({
     
     const { userId, userName, position } = cursorData;
     
-    console.log('🎨 Updating cursor decoration for:', userName, 'at position:', position);
+    console.log('🎨 Creating cursor decoration for:', userName, 'at line:', position.lineNumber, 'column:', position.column);
     
     // Remove previous decorations for this user
     if (decorationsRef.current[userId]) {
       editorRef.current.deltaDecorations(decorationsRef.current[userId], []);
     }
     
-    // Create cursor decoration
+    // Create cursor decoration at exact position
     const decorations = [
       {
         range: new monacoRef.current.Range(
@@ -682,6 +682,8 @@ export default function EditorArea({
           stickiness: monacoRef.current.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
           beforeContentClassName: `cursor-line-${userId}`,
           afterContentClassName: `cursor-label-${userId}`,
+          showIfCollapsed: true,
+          isWholeLine: false,
         }
       }
     ];
@@ -690,11 +692,38 @@ export default function EditorArea({
     const newDecorations = editorRef.current.deltaDecorations([], decorations);
     decorationsRef.current[userId] = newDecorations;
     
-    console.log('✅ Cursor decoration applied for:', userName);
+    console.log('✅ Cursor decoration applied for:', userName, 'with', newDecorations.length, 'decorations');
     
     // Add custom CSS for cursor
     addCursorStyles(userId, userName, color);
   }, []);
+
+  const debugCursorState = useCallback(() => {
+    console.log('🔍 Debug Cursor State:');
+    console.log('Active File ID:', activeFile?.id);
+    console.log('User ID:', user?.id);
+    console.log('Cursors Object:', cursors);
+    console.log('Decorations Ref:', decorationsRef.current);
+    
+    // Force re-render cursor decorations
+    if (editorRef.current && cursors && Object.keys(cursors).length > 0) {
+      Object.values(cursors).forEach(cursor => {
+        if (cursor.fileId === activeFile?.id && cursor.userId !== user?.id) {
+          const userColor = getUserColor?.(cursor.userId) || '#FF6B6B';
+          console.log('🔧 Force updating cursor for:', cursor.userName);
+          updateCursorDecorations(cursor, userColor);
+        }
+      });
+    }
+  }, [cursors, activeFile, user?.id, getUserColor, updateCursorDecorations]);
+  
+  // Add this useEffect to debug cursor state
+  useEffect(() => {
+    if (Object.keys(cursors).length > 0) {
+      console.log('🔍 Cursors changed, debugging state...');
+      debugCursorState();
+    }
+  }, [cursors, debugCursorState]);
 
   const updateSelectionDecorations = useCallback((selectionData: CursorData, color: string) => {
     if (!editorRef.current || !monacoRef.current) return;
@@ -752,52 +781,39 @@ export default function EditorArea({
         left: -1px;
         width: 2px;
         height: 100%;
-        background: linear-gradient(to bottom, ${color}, ${color}aa);
+        background: ${color};
         z-index: 1000;
-        animation: cursor-pulse-${userId} 1.5s ease-in-out infinite;
-        box-shadow: 0 0 3px ${color}50;
+        animation: cursor-blink-${userId} 1s ease-in-out infinite;
+        box-shadow: 0 0 4px ${color}80;
+        border-radius: 1px;
       }
       
       .cursor-label-${userId}::after {
         content: '${userName.replace(/'/g, "\\'")}';
         position: absolute;
-        top: -28px;
+        top: -32px;
         left: -1px;
-        background: linear-gradient(135deg, ${color}, ${color}dd);
+        background: ${color};
         color: white;
         padding: 4px 8px;
-        border-radius: 6px;
-        font-size: 11px;
+        border-radius: 4px;
+        font-size: 12px;
         font-weight: 600;
         white-space: nowrap;
         z-index: 1001;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         line-height: 1.2;
-        max-width: 120px;
+        pointer-events: none;
+        border: 1px solid ${color};
+        max-width: 150px;
         overflow: hidden;
         text-overflow: ellipsis;
-        pointer-events: none;
-        letter-spacing: 0.5px;
-        border: 1px solid ${color}aa;
-        transform: translateY(0);
-        transition: all 0.2s ease;
       }
       
-      .cursor-label-${userId}:hover::after {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      }
-      
-      @keyframes cursor-pulse-${userId} {
-        0%, 100% { 
-          opacity: 1; 
-          transform: scaleX(1);
-        }
-        50% { 
-          opacity: 0.7; 
-          transform: scaleX(1.2);
-        }
+      @keyframes cursor-blink-${userId} {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0.3; }
       }
       
       .cursor-${userId} {
@@ -806,9 +822,9 @@ export default function EditorArea({
     `;
     
     document.head.appendChild(style);
-    console.log('🎨 Cursor styles added for:', userName);
+    console.log('🎨 Enhanced cursor styles added for:', userName);
   };
-
+  
   const addSelectionStyles = (userId: string, color: string) => {
     const existingStyle = document.getElementById(`selection-style-${userId}`);
     if (existingStyle) {

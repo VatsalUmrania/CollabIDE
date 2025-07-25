@@ -1,330 +1,3 @@
-// import { Server as NetServer } from 'http'
-// import { NextApiRequest, NextApiResponse } from 'next'
-// import { Server as ServerIO } from 'socket.io'
-// import { prisma } from './db'
-// import { verifyToken } from './auth'
-
-// export type NextApiResponseServerIO = NextApiResponse & {
-//   socket: Socket & {
-//     server: NetServer & {
-//       io: ServerIO
-//     }
-//   }
-// }
-
-// interface AuthenticatedSocket extends Socket {
-//   userId?: string
-//   sessionId?: string
-// }
-
-// export const initializeSocket = (server: NetServer) => {
-//   const io = new ServerIO(server, {
-//     path: '/api/socket',
-//     addTrailingSlash: false,
-//     cors: {
-//       origin: process.env.NODE_ENV === 'production' 
-//         ? process.env.NEXTAUTH_URL 
-//         : 'http://localhost:3000',
-//       methods: ['GET', 'POST']
-//     }
-//   })
-
-//   // Authentication middleware
-//   io.use(async (socket: AuthenticatedSocket, next) => {
-//     try {
-//       const token = socket.handshake.auth.token
-//       if (!token) {
-//         return next(new Error('Authentication required'))
-//       }
-
-//       const payload = verifyToken(token)
-//       if (!payload) {
-//         return next(new Error('Invalid token'))
-//       }
-
-//       const user = await prisma.user.findUnique({
-//         where: { id: payload.userId },
-//         select: { id: true, displayName: true, email: true }
-//       })
-
-//       if (!user) {
-//         return next(new Error('User not found'))
-//       }
-
-//       socket.userId = user.id
-//       socket.user = user
-//       next()
-//     } catch (error) {
-//       next(new Error('Authentication failed'))
-//     }
-//   })
-
-//   io.on('connection', (socket: AuthenticatedSocket) => {
-//     console.log('User connected:', socket.user?.displayName)
-
-//     // Join session room
-//     socket.on('join-session', async (sessionId: string) => {
-//       try {
-//         const session = await prisma.session.findUnique({
-//           where: { id: sessionId },
-//           include: {
-//             participants: {
-//               include: {
-//                 user: {
-//                   select: { id: true, displayName: true, email: true }
-//                 }
-//               }
-//             }
-//           }
-//         })
-
-//         if (!session) {
-//           socket.emit('error', 'Session not found')
-//           return
-//         }
-
-//         // Check access permissions
-//         const hasAccess = session.ownerId === socket.userId ||
-//           session.participants.some(p => p.userId === socket.userId) ||
-//           session.type === 'PUBLIC'
-
-//         if (!hasAccess) {
-//           if (session.type === 'PRIVATE') {
-//             // Create join request for private sessions
-//             await prisma.joinRequest.upsert({
-//               where: {
-//                 userId_sessionId: {
-//                   userId: socket.userId!,
-//                   sessionId: sessionId
-//                 }
-//               },
-//               create: {
-//                 userId: socket.userId!,
-//                 sessionId: sessionId,
-//                 status: 'PENDING'
-//               },
-//               update: {}
-//             })
-
-//             // Notify session owner
-//             socket.to(`session-${sessionId}`).emit('join-request', {
-//               user: socket.user,
-//               sessionId
-//             })
-
-//             socket.emit('join-request-sent')
-//             return
-//           } else {
-//             socket.emit('error', 'Access denied')
-//             return
-//           }
-//         }
-
-//         // Add user as participant if not already
-//         if (!session.participants.some(p => p.userId === socket.userId)) {
-//           await prisma.sessionParticipant.create({
-//             data: {
-//               userId: socket.userId!,
-//               sessionId: sessionId,
-//               role: 'COLLABORATOR'
-//             }
-//           })
-//         }
-
-//         socket.sessionId = sessionId
-//         socket.join(`session-${sessionId}`)
-
-//         // Notify other participants
-//         socket.to(`session-${sessionId}`).emit('user-joined', {
-//           user: socket.user,
-//           timestamp: new Date()
-//         })
-
-//         // Send current session state
-//         socket.emit('session-joined', {
-//           session,
-//           content: session.content
-//         })
-
-//       } catch (error) {
-//         console.error('Join session error:', error)
-//         socket.emit('error', 'Failed to join session')
-//       }
-//     })
-//     socket.on('code-update', (data) => {
-//       console.log('📥 Received code update:', data.language, 'from user:', data.userId)
-      
-//       if (data.userId !== user?.id) {
-//         console.log('✅ Applying remote code change for', data.language)
-        
-//         // Update state immediately
-//         setCode(prev => {
-//           const newCode = { ...prev, [data.language]: data.content }
-//           lastCodeChangeRef.current[data.language] = data.content
-//           return newCode
-//         })
-        
-//         // Update Monaco editor if it's the active tab
-//         if (activeTab === data.language && editorRef.current) {
-//           const currentValue = editorRef.current.getValue()
-//           if (currentValue !== data.content) {
-//             console.log('🔄 Updating Monaco editor with remote changes')
-            
-//             // Temporarily disable change events to prevent loops
-//             const model = editorRef.current.getModel()
-//             if (model) {
-//               model.setValue(data.content)
-//             }
-//           }
-//         }
-//       }
-//     })
-//     // Handle code changes (Y.js operations)
-//     socket.on('code-operation', (operation) => {
-//       if (socket.sessionId) {
-//         socket.to(`session-${socket.sessionId}`).emit('code-operation', {
-//           operation,
-//           userId: socket.userId,
-//           timestamp: Date.now()
-//         })
-//       }
-//     })
-
-//     // Handle cursor position updates
-//     socket.on('cursor-update', (cursorData) => {
-//       if (socket.sessionId) {
-//         socket.to(`session-${socket.sessionId}`).emit('cursor-update', {
-//           ...cursorData,
-//           userId: socket.userId,
-//           user: socket.user
-//         })
-//       }
-//     })
-
-//     // Handle chat messages
-//     socket.on('chat-message', async (messageData) => {
-//       try {
-//         if (!socket.sessionId) return
-
-//         const message = await prisma.message.create({
-//           data: {
-//             content: messageData.content,
-//             userId: socket.userId!,
-//             sessionId: socket.sessionId
-//           },
-//           include: {
-//             user: {
-//               select: { id: true, displayName: true }
-//             }
-//           }
-//         })
-
-//         io.to(`session-${socket.sessionId}`).emit('chat-message', message)
-
-//       } catch (error) {
-//         console.error('Chat message error:', error)
-//         socket.emit('error', 'Failed to send message')
-//       }
-//     })
-
-//     // Handle join request responses (for hosts)
-//     socket.on('join-request-response', async ({ requestId, approved }) => {
-//       try {
-//         const joinRequest = await prisma.joinRequest.findUnique({
-//           where: { id: requestId },
-//           include: {
-//             session: true
-//           }
-//         })
-
-//         if (!joinRequest || joinRequest.session.ownerId !== socket.userId) {
-//           return
-//         }
-
-//         await prisma.joinRequest.update({
-//           where: { id: requestId },
-//           data: { status: approved ? 'APPROVED' : 'DENIED' }
-//         })
-
-//         if (approved) {
-//           // Add as participant
-//           await prisma.sessionParticipant.create({
-//             data: {
-//               userId: joinRequest.userId,
-//               sessionId: joinRequest.sessionId,
-//               role: 'COLLABORATOR'
-//             }
-//           })
-//         }
-
-//         // Notify the requesting user
-//         socket.emit('join-request-handled', {
-//           requestId,
-//           approved,
-//           sessionId: joinRequest.sessionId
-//         })
-
-//       } catch (error) {
-//         console.error('Join request response error:', error)
-//       }
-//     })
-// // In your session page, ensure this event handler is properly set up
-// socket.on('file-update', (data) => {
-//   // This should trigger when another user makes changes
-//   if (data.userId !== user?.id && data.fileId === activeFileId) {
-//     console.log('📥 Receiving code update from another user')
-//     setFiles(prev => prev.map(file => 
-//       file.id === data.fileId 
-//         ? { ...file, content: data.content, updatedAt: new Date() }
-//         : file
-//     ))
-//   }
-// })
-
-//     // Handle disconnect
-//     socket.on('disconnect', () => {
-//       console.log('User disconnected:', socket.user?.displayName)
-      
-//       if (socket.sessionId) {
-//         socket.to(`session-${socket.sessionId}`).emit('user-left', {
-//           user: socket.user,
-//           timestamp: new Date()
-//         })
-//       }
-//     })
-//   })
-
-//   // In your session page useEffect for socket events, update the session-ended handler:
-
-// socket.on('session-ended', (data) => {
-//   console.log('🛑 Session ended by host:', data)
-  
-//   // Show notification modal instead of alert
-//   setShowSessionEndedModal(true)
-//   setSessionEndedReason(data.reason || 'The host has ended this session')
-  
-//   // Automatically redirect after a delay
-//   setTimeout(() => {
-//     router.push('/dashboard')
-//   }, 3000)
-// })
-
-// // Add this to handle being kicked out by host
-// socket.on('participant-kicked', (data) => {
-//   console.log('🚫 You were removed from the session:', data)
-//   alert(`You have been removed from this session by the host: ${data.reason || 'No reason provided'}`)
-//   router.push('/dashboard')
-// })
-
-// // Handle force disconnect
-// socket.on('force-disconnect', (data) => {
-//   console.log('⚠️ Force disconnected:', data)
-//   router.push('/dashboard')
-// })
-
-//   return io
-// }
-
 import { Server as NetServer } from 'http'
 import { NextApiRequest, NextApiResponse } from 'next'
 import { Server as ServerIO } from 'socket.io'
@@ -674,30 +347,36 @@ export const initializeSocket = (server: NetServer) => {
 
     // FIXED: Correct cursor tracking handlers
     socket.on('cursor-position', (data) => {
-      console.log('📍 SERVER received cursor position from:', socket.user?.displayName, 'at:', data.position);
+      console.log('📍 SERVER received cursor from:', socket.user?.displayName, 'at position:', data.position);
+      
       if (socket.sessionId) {
-        // Broadcast to all other users in the session except sender
+        // Broadcast to all other users in the session
         socket.to(`session-${socket.sessionId}`).emit('cursor-position', {
-          ...data,
           userId: socket.userId,
           userName: socket.user?.displayName || 'Anonymous',
+          fileId: data.fileId,
+          position: data.position,
+          selection: data.selection,
           timestamp: Date.now()
         });
-        console.log('📡 Cursor position broadcasted to session:', socket.sessionId);
+        
+        console.log('📡 Cursor broadcasted to session:', socket.sessionId);
       }
     });
-
+  
     socket.on('cursor-selection', (data) => {
-      console.log('🔤 SERVER received cursor selection from:', socket.user?.displayName);
+      console.log('🔤 SERVER received selection from:', socket.user?.displayName);
+      
       if (socket.sessionId) {
-        // Broadcast to all other users in the session except sender
         socket.to(`session-${socket.sessionId}`).emit('cursor-selection', {
-          ...data,
           userId: socket.userId,
           userName: socket.user?.displayName || 'Anonymous',
+          fileId: data.fileId,
+          selection: data.selection,
           timestamp: Date.now()
         });
-        console.log('📡 Cursor selection broadcasted to session:', socket.sessionId);
+        
+        console.log('📡 Selection broadcasted to session:', socket.sessionId);
       }
     });
 
