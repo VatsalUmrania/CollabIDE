@@ -3,25 +3,46 @@
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
 import { cva, type VariantProps } from "class-variance-authority"
-import { Check, ChevronDown, ChevronUp, Search, X, AlertCircle, Loader2 } from "lucide-react"
+import { 
+  Check, 
+  ChevronDown, 
+  ChevronUp, 
+  Search, 
+  X, 
+  AlertCircle, 
+  Loader2,
+  Users,
+  Code,
+  Settings,
+  Crown,
+  Globe
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const selectTriggerVariants = cva(
-  "flex w-full items-center justify-between rounded-md border bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-200",
+  "flex w-full items-center justify-between rounded-lg border bg-card text-foreground text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 transition-all duration-300 backdrop-blur-sm relative overflow-hidden",
   {
     variants: {
       variant: {
-        default: "border-input hover:border-primary/50",
-        destructive: "border-destructive focus:ring-destructive",
-        success: "border-green-500 focus:ring-green-500",
-        warning: "border-yellow-500 focus:ring-yellow-500",
-        ghost: "border-transparent bg-transparent hover:bg-accent",
-        outline: "border-2 border-input hover:border-primary",
+        default: "border-border/50 hover:border-primary/50 focus:border-primary bg-card/80 shadow-sm hover:shadow-md",
+        destructive: "border-destructive/50 focus:ring-destructive bg-destructive/5 shadow-sm shadow-destructive/10",
+        success: "border-success/50 focus:ring-success bg-success/5 shadow-sm shadow-success/10",
+        warning: "border-warning/50 focus:ring-warning bg-warning/5 shadow-sm shadow-warning/10",
+        info: "border-info/50 focus:ring-info bg-info/5 shadow-sm shadow-info/10",
+        ghost: "border-transparent bg-transparent hover:bg-accent/50 focus:bg-card/50",
+        outline: "border-2 border-border hover:border-primary focus:border-primary bg-transparent",
+        glass: "glass-effect border-border/30 hover:border-primary/50 focus:border-primary/70 shadow-lg",
+        // CollabIDE-specific variants
+        collaboration: "border-accent-purple/30 bg-accent-purple/5 hover:border-accent-purple/50 focus:border-accent-purple shadow-sm shadow-accent-purple/10",
+        session: "border-accent-blue/30 bg-accent-blue/5 hover:border-accent-blue/50 focus:border-accent-blue shadow-sm shadow-accent-blue/10",
+        editor: "border-border/50 bg-editor-background hover:border-primary/50 focus:border-primary font-mono",
       },
       size: {
-        sm: "h-8 px-2 py-1 text-xs",
-        default: "h-10 px-3 py-2",
-        lg: "h-12 px-4 py-3 text-base",
+        xs: "h-7 px-2 py-1 text-xs rounded-md",
+        sm: "h-8 px-3 py-1.5 text-xs rounded-md",
+        default: "h-10 px-3 py-2 text-sm",
+        lg: "h-12 px-4 py-3 text-base rounded-xl",
+        xl: "h-14 px-5 py-4 text-lg rounded-xl",
       }
     },
     defaultVariants: {
@@ -32,16 +53,23 @@ const selectTriggerVariants = cva(
 )
 
 const selectContentVariants = cva(
-  "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
+  "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
   {
     variants: {
+      variant: {
+        default: "border-border/50 bg-popover/95",
+        glass: "glass-card border-border/30",
+      },
       size: {
+        xs: "text-xs",
         sm: "text-xs",
         default: "text-sm",
         lg: "text-base",
+        xl: "text-lg",
       }
     },
     defaultVariants: {
+      variant: "default",
       size: "default",
     },
   }
@@ -59,6 +87,8 @@ interface SelectProps extends React.ComponentPropsWithoutRef<typeof SelectPrimit
   searchable?: boolean
   clearable?: boolean
   onClear?: () => void
+  animated?: boolean
+  glow?: boolean
 }
 
 const Select = React.forwardRef<
@@ -75,6 +105,8 @@ const Select = React.forwardRef<
   searchable,
   clearable,
   onClear,
+  animated = true,
+  glow = false,
   children,
   ...props 
 }, ref) => {
@@ -94,24 +126,24 @@ const Select = React.forwardRef<
     <div className="space-y-2">
       {label && (
         <label className={cn(
-          "text-sm font-medium leading-none",
-          error && "text-destructive",
-          success && "text-green-600"
+          "text-sm font-medium leading-none transition-colors duration-200",
+          error ? "text-destructive" : success ? "text-success" : "text-foreground",
+          required && "after:content-['*'] after:text-destructive after:ml-1"
         )}>
           {label}
-          {required && <span className="text-destructive ml-1">*</span>}
         </label>
       )}
       {selectContent}
       {(error || success || description) && (
-        <p className={cn(
-          "text-xs",
-          error && "text-destructive",
-          success && "text-green-600",
-          !error && !success && "text-muted-foreground"
-        )}>
-          {error || success || description}
-        </p>
+        <div className="flex items-start gap-1">
+          {error && <AlertCircle className="h-3 w-3 text-destructive mt-0.5 flex-shrink-0" />}
+          <p className={cn(
+            "text-xs transition-colors duration-200",
+            error ? "text-destructive animate-slide-down" : success ? "text-success" : "text-muted-foreground"
+          )}>
+            {error || success || description}
+          </p>
+        </div>
       )}
     </div>
   )
@@ -129,36 +161,84 @@ interface SelectTriggerProps
   error?: boolean
   success?: boolean
   icon?: React.ReactNode
+  clearable?: boolean
+  onClear?: () => void
+  glow?: boolean
 }
 
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   SelectTriggerProps
->(({ className, variant, size, loading, error, success, icon, children, ...props }, ref) => {
+>(({ 
+  className, 
+  variant, 
+  size, 
+  loading, 
+  error, 
+  success, 
+  icon, 
+  clearable,
+  onClear,
+  glow = false,
+  children, 
+  ...props 
+}, ref) => {
+  const [isFocused, setIsFocused] = React.useState(false)
   const currentVariant = error ? 'destructive' : success ? 'success' : variant
+
+  const handleClear = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    onClear?.()
+  }
 
   return (
     <SelectPrimitive.Trigger
       ref={ref}
-      className={cn(selectTriggerVariants({ variant: currentVariant, size }), className)}
+      className={cn(
+        selectTriggerVariants({ variant: currentVariant, size }),
+        glow && isFocused && "animate-glow",
+        className
+      )}
+      onFocus={() => setIsFocused(true)}
+      onBlur={() => setIsFocused(false)}
       {...props}
     >
-      <div className="flex items-center space-x-2 flex-1">
+      {/* Focus ring animation */}
+      {isFocused && (
+        <div className="absolute inset-0 rounded-inherit bg-primary/20 animate-ping" />
+      )}
+
+      <div className="flex items-center space-x-2 flex-1 min-w-0 relative z-10">
         {icon && (
-          <span className="text-muted-foreground flex-shrink-0">
-            {icon}
+          <span className="text-muted-foreground flex-shrink-0 transition-colors group-focus-within:text-primary">
+            {React.isValidElement(icon) 
+              ? React.cloneElement(icon as React.ReactElement, { className: 'h-4 w-4' })
+              : icon
+            }
           </span>
         )}
-        <span className="flex-1 text-left">
+        <span className="flex-1 text-left truncate">
           {children}
         </span>
       </div>
-      <div className="flex items-center space-x-1">
-        {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-        {error && !loading && <AlertCircle className="h-4 w-4 text-destructive" />}
-        {success && !loading && <Check className="h-4 w-4 text-green-500" />}
+      
+      <div className="flex items-center space-x-1 relative z-10">
+        {clearable && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-110 active:scale-95 rounded-sm p-0.5"
+            tabIndex={-1}
+            aria-label="Clear selection"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+        {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+        {error && !loading && <AlertCircle className="h-4 w-4 text-destructive animate-scale-in" />}
+        {success && !loading && <Check className="h-4 w-4 text-success animate-scale-in" />}
         <SelectPrimitive.Icon asChild>
-          <ChevronDown className="h-4 w-4 opacity-50" />
+          <ChevronDown className="h-4 w-4 opacity-50 transition-transform duration-200 data-[state=open]:rotate-180" />
         </SelectPrimitive.Icon>
       </div>
     </SelectPrimitive.Trigger>
@@ -173,7 +253,7 @@ const SelectScrollUpButton = React.forwardRef<
   <SelectPrimitive.ScrollUpButton
     ref={ref}
     className={cn(
-      "flex cursor-default items-center justify-center py-1",
+      "flex cursor-default items-center justify-center py-1 hover:bg-accent transition-colors",
       className
     )}
     {...props}
@@ -190,7 +270,7 @@ const SelectScrollDownButton = React.forwardRef<
   <SelectPrimitive.ScrollDownButton
     ref={ref}
     className={cn(
-      "flex cursor-default items-center justify-center py-1",
+      "flex cursor-default items-center justify-center py-1 hover:bg-accent transition-colors",
       className
     )}
     {...props}
@@ -205,12 +285,23 @@ interface SelectContentProps
     VariantProps<typeof selectContentVariants> {
   searchable?: boolean
   onSearch?: (value: string) => void
+  emptyMessage?: string
 }
 
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   SelectContentProps
->(({ className, children, position = "popper", size, searchable, onSearch, ...props }, ref) => {
+>(({ 
+  className, 
+  children, 
+  position = "popper", 
+  variant,
+  size, 
+  searchable, 
+  onSearch,
+  emptyMessage = "No results found.",
+  ...props 
+}, ref) => {
   const [searchValue, setSearchValue] = React.useState("")
 
   const handleSearch = (value: string) => {
@@ -218,12 +309,17 @@ const SelectContent = React.forwardRef<
     onSearch?.(value)
   }
 
+  const clearSearch = () => {
+    setSearchValue("")
+    onSearch?.("")
+  }
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         ref={ref}
         className={cn(
-          selectContentVariants({ size }),
+          selectContentVariants({ variant, size }),
           position === "popper" &&
             "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className
@@ -233,18 +329,19 @@ const SelectContent = React.forwardRef<
       >
         <SelectScrollUpButton />
         {searchable && (
-          <div className="flex items-center border-b px-3 py-2">
-            <Search className="h-4 w-4 text-muted-foreground mr-2" />
+          <div className="flex items-center border-b border-border/50 px-3 py-2 bg-muted/20">
+            <Search className="h-4 w-4 text-muted-foreground mr-2 flex-shrink-0" />
             <input
               className="flex-1 text-sm bg-transparent outline-none placeholder:text-muted-foreground"
-              placeholder="Search..."
+              placeholder="Search options..."
               value={searchValue}
               onChange={(e) => handleSearch(e.target.value)}
+              autoFocus
             />
             {searchValue && (
               <button
-                onClick={() => handleSearch("")}
-                className="text-muted-foreground hover:text-foreground ml-2"
+                onClick={clearSearch}
+                className="text-muted-foreground hover:text-foreground ml-2 transition-colors hover:scale-110 active:scale-95"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -273,7 +370,10 @@ const SelectLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Label
     ref={ref}
-    className={cn("py-1.5 pl-8 pr-2 text-sm font-semibold", className)}
+    className={cn(
+      "py-2 pl-3 pr-2 text-sm font-semibold text-muted-foreground bg-muted/50 border-b border-border/30",
+      className
+    )}
     {...props}
   />
 ))
@@ -283,50 +383,65 @@ interface SelectItemProps extends React.ComponentPropsWithoutRef<typeof SelectPr
   icon?: React.ReactNode
   description?: string
   badge?: React.ReactNode
+  variant?: 'default' | 'success' | 'warning' | 'destructive' | 'info'
 }
 
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   SelectItemProps
->(({ className, children, icon, description, badge, ...props }, ref) => (
-  <SelectPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
-      <SelectPrimitive.ItemIndicator>
-        <Check className="h-4 w-4" />
-      </SelectPrimitive.ItemIndicator>
-    </span>
+>(({ className, children, icon, description, badge, variant, ...props }, ref) => {
+  const variantClasses = {
+    default: "",
+    success: "data-[highlighted]:bg-success/10 data-[highlighted]:text-success-foreground",
+    warning: "data-[highlighted]:bg-warning/10 data-[highlighted]:text-warning-foreground",
+    destructive: "data-[highlighted]:bg-destructive/10 data-[highlighted]:text-destructive-foreground",
+    info: "data-[highlighted]:bg-info/10 data-[highlighted]:text-info-foreground",
+  }
 
-    <div className="flex items-center space-x-2 flex-1 min-w-0">
-      {icon && (
-        <span className="flex-shrink-0 text-muted-foreground">
-          {icon}
-        </span>
+  return (
+    <SelectPrimitive.Item
+      ref={ref}
+      className={cn(
+        "relative flex w-full cursor-default select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[highlighted]:bg-accent data-[highlighted]:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors duration-200 hover:bg-accent/50",
+        variant && variantClasses[variant],
+        className
       )}
-      <div className="flex-1 min-w-0">
-        <SelectPrimitive.ItemText className="block truncate">
-          {children}
-        </SelectPrimitive.ItemText>
-        {description && (
-          <div className="text-xs text-muted-foreground truncate">
-            {description}
-          </div>
+      {...props}
+    >
+      <span className="absolute left-2 flex h-4 w-4 items-center justify-center">
+        <SelectPrimitive.ItemIndicator>
+          <Check className="h-4 w-4 animate-scale-in" />
+        </SelectPrimitive.ItemIndicator>
+      </span>
+
+      <div className="flex items-center space-x-2 flex-1 min-w-0">
+        {icon && (
+          <span className="flex-shrink-0 text-muted-foreground transition-colors">
+            {React.isValidElement(icon) 
+              ? React.cloneElement(icon as React.ReactElement, { className: 'h-4 w-4' })
+              : icon
+            }
+          </span>
+        )}
+        <div className="flex-1 min-w-0">
+          <SelectPrimitive.ItemText className="block truncate font-medium">
+            {children}
+          </SelectPrimitive.ItemText>
+          {description && (
+            <div className="text-xs text-muted-foreground truncate opacity-80">
+              {description}
+            </div>
+          )}
+        </div>
+        {badge && (
+          <span className="flex-shrink-0 ml-2">
+            {badge}
+          </span>
         )}
       </div>
-      {badge && (
-        <span className="flex-shrink-0 ml-2">
-          {badge}
-        </span>
-      )}
-    </div>
-  </SelectPrimitive.Item>
-))
+    </SelectPrimitive.Item>
+  )
+})
 SelectItem.displayName = SelectPrimitive.Item.displayName
 
 const SelectSeparator = React.forwardRef<
@@ -335,13 +450,13 @@ const SelectSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SelectPrimitive.Separator
     ref={ref}
-    className={cn("-mx-1 my-1 h-px bg-muted", className)}
+    className={cn("my-1 h-px bg-border/50", className)}
     {...props}
   />
 ))
 SelectSeparator.displayName = SelectPrimitive.Separator.displayName
 
-// Specialized Select Components
+// Enhanced specialized Select components for CollabIDE
 const LanguageSelect = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Root>,
   SelectProps & {
@@ -350,32 +465,84 @@ const LanguageSelect = React.forwardRef<
       label: string
       icon?: string
       description?: string
+      badge?: string
     }>
+    showDescription?: boolean
   }
->(({ languages = [], ...props }, ref) => {
+>(({ languages = [], showDescription = true, ...props }, ref) => {
   const defaultLanguages = [
-    { value: 'javascript', label: 'JavaScript', icon: '🟨', description: 'Modern web development' },
-    { value: 'typescript', label: 'TypeScript', icon: '🔷', description: 'JavaScript with types' },
-    { value: 'python', label: 'Python', icon: '🐍', description: 'General purpose programming' },
-    { value: 'html', label: 'HTML', icon: '🌐', description: 'Markup language' },
-    { value: 'css', label: 'CSS', icon: '🎨', description: 'Styling and layout' },
-    { value: 'cpp', label: 'C++', icon: '🔵', description: 'System programming' },
+    { 
+      value: 'javascript', 
+      label: 'JavaScript', 
+      icon: '🟨', 
+      description: 'Modern web development',
+      badge: 'Popular'
+    },
+    { 
+      value: 'typescript', 
+      label: 'TypeScript', 
+      icon: '🔷', 
+      description: 'JavaScript with static typing',
+      badge: 'Recommended'
+    },
+    { 
+      value: 'python', 
+      label: 'Python', 
+      icon: '🐍', 
+      description: 'General purpose programming'
+    },
+    { 
+      value: 'react', 
+      label: 'React (JSX)', 
+      icon: '⚛️', 
+      description: 'React components and JSX'
+    },
+    { 
+      value: 'html', 
+      label: 'HTML', 
+      icon: '🌐', 
+      description: 'Markup language'
+    },
+    { 
+      value: 'css', 
+      label: 'CSS', 
+      icon: '🎨', 
+      description: 'Styling and layout'
+    },
+    { 
+      value: 'cpp', 
+      label: 'C++', 
+      icon: '🔵', 
+      description: 'System programming'
+    },
+    { 
+      value: 'java', 
+      label: 'Java', 
+      icon: '☕', 
+      description: 'Enterprise development'
+    },
   ]
 
   const languageOptions = languages.length > 0 ? languages : defaultLanguages
 
   return (
-    <Select {...props}>
-      <SelectTrigger>
-        <SelectValue placeholder="Select language..." />
+    <Select variant="editor" {...props}>
+      <SelectTrigger icon={<Code className="h-4 w-4" />}>
+        <SelectValue placeholder="Select programming language..." />
       </SelectTrigger>
-      <SelectContent>
+      <SelectContent searchable>
+        <SelectLabel>Programming Languages</SelectLabel>
         {languageOptions.map((lang) => (
           <SelectItem 
             key={lang.value} 
             value={lang.value}
             icon={lang.icon && <span className="text-base">{lang.icon}</span>}
-            description={lang.description}
+            description={showDescription ? lang.description : undefined}
+            badge={lang.badge && (
+              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full border border-primary/20">
+                {lang.badge}
+              </span>
+            )}
           >
             {lang.label}
           </SelectItem>
@@ -386,43 +553,131 @@ const LanguageSelect = React.forwardRef<
 })
 LanguageSelect.displayName = 'LanguageSelect'
 
-const StatusSelect = React.forwardRef<
+const SessionTypeSelect = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Root>,
   SelectProps
 >(({ ...props }, ref) => (
+  <Select variant="session" {...props}>
+    <SelectTrigger icon={<Settings className="h-4 w-4" />}>
+      <SelectValue placeholder="Select session type..." />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectLabel>Session Types</SelectLabel>
+      <SelectItem 
+        value="public"
+        icon={<Globe className="h-4 w-4" />}
+        description="Anyone can join with the session link"
+        variant="success"
+      >
+        Public Session
+      </SelectItem>
+      <SelectItem 
+        value="private"
+        icon={<Users className="h-4 w-4" />}
+        description="Only invited users can join"
+        variant="info"
+      >
+        Private Session
+      </SelectItem>
+      <SelectItem 
+        value="restricted"
+        icon={<Crown className="h-4 w-4" />}
+        description="Approval required to join"
+        variant="warning"
+      >
+        Restricted Session
+      </SelectItem>
+    </SelectContent>
+  </Select>
+))
+SessionTypeSelect.displayName = 'SessionTypeSelect'
+
+const StatusSelect = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Root>,
+  SelectProps & {
+    showDescriptions?: boolean
+  }
+>(({ showDescriptions = true, ...props }, ref) => (
   <Select {...props}>
     <SelectTrigger>
       <SelectValue placeholder="Select status..." />
     </SelectTrigger>
     <SelectContent>
+      <SelectLabel>Status Options</SelectLabel>
       <SelectItem 
-        value="active"
-        icon={<div className="w-2 h-2 rounded-full bg-green-500" />}
+        value="online"
+        icon={<div className="w-2 h-2 rounded-full bg-success animate-pulse-subtle" />}
+        description={showDescriptions ? "Available for collaboration" : undefined}
+        variant="success"
       >
-        Active
+        Online
       </SelectItem>
       <SelectItem 
-        value="inactive"
-        icon={<div className="w-2 h-2 rounded-full bg-gray-400" />}
+        value="away"
+        icon={<div className="w-2 h-2 rounded-full bg-warning" />}
+        description={showDescriptions ? "Away but receiving notifications" : undefined}
+        variant="warning"
       >
-        Inactive
+        Away
       </SelectItem>
       <SelectItem 
-        value="pending"
-        icon={<div className="w-2 h-2 rounded-full bg-yellow-500" />}
+        value="busy"
+        icon={<div className="w-2 h-2 rounded-full bg-destructive" />}
+        description={showDescriptions ? "Do not disturb" : undefined}
+        variant="destructive"
       >
-        Pending
+        Busy
       </SelectItem>
       <SelectItem 
-        value="error"
-        icon={<div className="w-2 h-2 rounded-full bg-red-500" />}
+        value="offline"
+        icon={<div className="w-2 h-2 rounded-full bg-muted-foreground" />}
+        description={showDescriptions ? "Not available" : undefined}
       >
-        Error
+        Offline
       </SelectItem>
     </SelectContent>
   </Select>
 ))
 StatusSelect.displayName = 'StatusSelect'
+
+const RoleSelect = React.forwardRef<
+  React.ElementRef<typeof SelectPrimitive.Root>,
+  SelectProps
+>(({ ...props }, ref) => (
+  <Select variant="collaboration" {...props}>
+    <SelectTrigger icon={<Users className="h-4 w-4" />}>
+      <SelectValue placeholder="Select role..." />
+    </SelectTrigger>
+    <SelectContent>
+      <SelectLabel>User Roles</SelectLabel>
+      <SelectItem 
+        value="host"
+        icon={<Crown className="h-4 w-4" />}
+        description="Full control over the session"
+        badge={<span className="text-xs text-accent-orange">HOST</span>}
+        variant="warning"
+      >
+        Host
+      </SelectItem>
+      <SelectItem 
+        value="collaborator"
+        icon={<Users className="h-4 w-4" />}
+        description="Can edit and collaborate in real-time"
+        variant="success"
+      >
+        Collaborator
+      </SelectItem>
+      <SelectItem 
+        value="viewer"
+        icon={<Globe className="h-4 w-4" />}
+        description="Can view but cannot edit"
+      >
+        Viewer
+      </SelectItem>
+    </SelectContent>
+  </Select>
+))
+RoleSelect.displayName = 'RoleSelect'
 
 export {
   Select,
@@ -436,5 +691,7 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
   LanguageSelect,
+  SessionTypeSelect,
   StatusSelect,
+  RoleSelect,
 }

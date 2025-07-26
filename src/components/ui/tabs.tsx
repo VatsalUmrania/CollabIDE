@@ -3,28 +3,49 @@
 import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
 import { cva, type VariantProps } from 'class-variance-authority'
-import { X, Plus, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react'
+import { 
+  X, 
+  Plus, 
+  ChevronLeft, 
+  ChevronRight, 
+  MoreHorizontal,
+  FileText,
+  Code,
+  Settings,
+  Users,
+  Terminal,
+  Database,
+  Loader2,
+  AlertCircle
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const tabsListVariants = cva(
-  'inline-flex items-center justify-center text-muted-foreground transition-all duration-200',
+  'inline-flex items-center justify-center text-muted-foreground transition-all duration-300 relative',
   {
     variants: {
       variant: {
-        default: 'bg-muted p-1 rounded-md',
-        underline: 'border-b border-border bg-transparent p-0',
+        default: 'bg-card/50 p-1 rounded-lg border border-border/30 backdrop-blur-sm shadow-sm',
+        underline: 'border-b border-border/50 bg-transparent p-0 backdrop-blur-sm',
         pills: 'bg-transparent p-0 space-x-1',
-        cards: 'bg-transparent p-0 border-b border-border',
+        cards: 'bg-transparent p-0 border-b border-border/50 backdrop-blur-sm',
         ghost: 'bg-transparent p-0',
+        editor: 'bg-editor-background border-b border-border/30 p-0 backdrop-blur-sm',
+        // CollabIDE-specific variants
+        collaboration: 'bg-accent-purple/5 border border-accent-purple/20 p-1 rounded-lg backdrop-blur-sm',
+        session: 'bg-accent-blue/5 border border-accent-blue/20 p-1 rounded-lg backdrop-blur-sm',
+        glass: 'glass-card p-1 rounded-lg shadow-lg',
       },
       size: {
+        xs: 'h-7 text-xs',
         sm: 'h-8 text-xs',
         default: 'h-10 text-sm',
         lg: 'h-12 text-base',
+        xl: 'h-14 text-lg',
       },
       orientation: {
         horizontal: 'flex-row',
-        vertical: 'flex-col w-fit',
+        vertical: 'flex-col w-fit items-stretch',
       }
     },
     defaultVariants: {
@@ -36,25 +57,35 @@ const tabsListVariants = cva(
 )
 
 const tabsTriggerVariants = cva(
-  'inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
+  'inline-flex items-center justify-center whitespace-nowrap font-medium ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 relative overflow-hidden group',
   {
     variants: {
       variant: {
         default: 
-          'rounded-sm px-3 py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm',
+          'rounded-md px-3 py-1.5 hover:bg-accent/50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-md hover:shadow-sm backdrop-blur-sm',
         underline:
-          'border-b-2 border-transparent px-4 py-2 data-[state=active]:border-primary data-[state=active]:text-foreground hover:text-foreground',
+          'border-b-2 border-transparent px-4 py-2 hover:bg-accent/30 data-[state=active]:border-primary data-[state=active]:text-foreground data-[state=active]:bg-primary/5 hover:text-foreground',
         pills:
-          'rounded-full px-4 py-2 hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground',
+          'rounded-full px-4 py-2 hover:bg-accent/50 hover:text-accent-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:shadow-sm',
         cards:
-          'border border-b-0 rounded-t-md px-4 py-2 bg-muted data-[state=active]:bg-background data-[state=active]:text-foreground',
+          'border border-b-0 rounded-t-lg px-4 py-2 bg-card/50 hover:bg-card/80 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-lg backdrop-blur-sm',
         ghost:
-          'px-3 py-1.5 hover:bg-accent hover:text-accent-foreground data-[state=active]:bg-accent data-[state=active]:text-accent-foreground',
+          'px-3 py-1.5 rounded-md hover:bg-accent/50 hover:text-accent-foreground data-[state=active]:bg-accent/70 data-[state=active]:text-accent-foreground',
+        editor:
+          'px-3 py-2 rounded-t-md hover:bg-card/30 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:border-b-2 data-[state=active]:border-primary font-mono text-xs',
+        collaboration:
+          'rounded-md px-3 py-1.5 hover:bg-accent-purple/10 data-[state=active]:bg-accent-purple/20 data-[state=active]:text-accent-purple data-[state=active]:shadow-md backdrop-blur-sm',
+        session:
+          'rounded-md px-3 py-1.5 hover:bg-accent-blue/10 data-[state=active]:bg-accent-blue/20 data-[state=active]:text-accent-blue data-[state=active]:shadow-md backdrop-blur-sm',
+        glass:
+          'rounded-md px-3 py-1.5 hover:bg-white/10 data-[state=active]:glass-effect data-[state=active]:text-foreground data-[state=active]:shadow-lg backdrop-blur-sm',
       },
       size: {
-        sm: 'text-xs px-2 py-1',
-        default: 'text-sm px-3 py-1.5',
-        lg: 'text-base px-4 py-2',
+        xs: 'text-xs px-2 py-1 min-h-[1.75rem]',
+        sm: 'text-xs px-2 py-1 min-h-[2rem]',
+        default: 'text-sm px-3 py-1.5 min-h-[2.5rem]',
+        lg: 'text-base px-4 py-2 min-h-[3rem]',
+        xl: 'text-lg px-5 py-2.5 min-h-[3.5rem]',
       }
     },
     defaultVariants: {
@@ -65,15 +96,19 @@ const tabsTriggerVariants = cva(
 )
 
 const tabsContentVariants = cva(
-  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+  'ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-all duration-300',
   {
     variants: {
       variant: {
         default: 'mt-2',
         underline: 'mt-4',
         pills: 'mt-4',
-        cards: 'border border-t-0 rounded-b-md rounded-tr-md bg-background p-4',
+        cards: 'border border-t-0 rounded-b-lg rounded-tr-lg bg-background p-4 shadow-sm backdrop-blur-sm',
         ghost: 'mt-2',
+        editor: 'mt-0 bg-editor-background border-t border-border/30',
+        collaboration: 'mt-2 p-4 bg-accent-purple/5 rounded-lg border border-accent-purple/20 backdrop-blur-sm',
+        session: 'mt-2 p-4 bg-accent-blue/5 rounded-lg border border-accent-blue/20 backdrop-blur-sm',
+        glass: 'mt-2 p-4 glass-card rounded-lg shadow-lg',
       }
     },
     defaultVariants: {
@@ -90,15 +125,36 @@ interface TabsProps
   onAddTab?: () => void
   closable?: boolean
   onCloseTab?: (value: string) => void
+  animated?: boolean
+  glow?: boolean
 }
 
 const Tabs = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Root>,
   TabsProps
->(({ variant, size, orientation, scrollable, addable, onAddTab, closable, onCloseTab, className, children, ...props }, ref) => (
+>(({ 
+  variant, 
+  size, 
+  orientation, 
+  scrollable, 
+  addable, 
+  onAddTab, 
+  closable, 
+  onCloseTab, 
+  animated = true,
+  glow = false,
+  className, 
+  children, 
+  ...props 
+}, ref) => (
   <TabsPrimitive.Root
     ref={ref}
-    className={cn('w-full', className)}
+    className={cn(
+      'w-full',
+      animated && 'animate-fade-in',
+      glow && 'animate-glow',
+      className
+    )}
     orientation={orientation}
     {...props}
   >
@@ -114,12 +170,27 @@ interface TabsListProps
   addable?: boolean
   onAddTab?: () => void
   showScrollButtons?: boolean
+  showMoreButton?: boolean
+  onMore?: () => void
 }
 
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   TabsListProps
->(({ className, variant, size, orientation, scrollable, addable, onAddTab, showScrollButtons, children, ...props }, ref) => {
+>(({ 
+  className, 
+  variant, 
+  size, 
+  orientation, 
+  scrollable, 
+  addable, 
+  onAddTab, 
+  showScrollButtons = true,
+  showMoreButton = false,
+  onMore,
+  children, 
+  ...props 
+}, ref) => {
   const [canScrollLeft, setCanScrollLeft] = React.useState(false)
   const [canScrollRight, setCanScrollRight] = React.useState(false)
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
@@ -136,6 +207,12 @@ const TabsList = React.forwardRef<
 
   React.useEffect(() => {
     checkScrollability()
+    const container = scrollContainerRef.current
+    if (container) {
+      const resizeObserver = new ResizeObserver(checkScrollability)
+      resizeObserver.observe(container)
+      return () => resizeObserver.disconnect()
+    }
   }, [checkScrollability])
 
   const scroll = (direction: 'left' | 'right') => {
@@ -157,19 +234,48 @@ const TabsList = React.forwardRef<
       {...props}
     >
       {children}
+      
+      {/* Add button */}
       {addable && (
         <button
           onClick={onAddTab}
           className={cn(
-            'flex items-center justify-center rounded-sm hover:bg-accent hover:text-accent-foreground',
+            'flex items-center justify-center rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-all duration-200 hover:scale-110 active:scale-95 ml-1 backdrop-blur-sm',
+            size === 'xs' && 'h-5 w-5',
             size === 'sm' && 'h-6 w-6',
             size === 'default' && 'h-8 w-8',
-            size === 'lg' && 'h-10 w-10'
+            size === 'lg' && 'h-10 w-10',
+            size === 'xl' && 'h-12 w-12'
           )}
           type="button"
           aria-label="Add new tab"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className={cn(
+            size === 'xs' && 'h-3 w-3',
+            size === 'sm' && 'h-3 w-3',
+            size === 'default' && 'h-4 w-4',
+            size === 'lg' && 'h-5 w-5',
+            size === 'xl' && 'h-6 w-6'
+          )} />
+        </button>
+      )}
+
+      {/* More button */}
+      {showMoreButton && (
+        <button
+          onClick={onMore}
+          className={cn(
+            'flex items-center justify-center rounded-md hover:bg-accent/50 hover:text-accent-foreground transition-all duration-200 hover:scale-110 active:scale-95 ml-1',
+            size === 'xs' && 'h-5 w-5',
+            size === 'sm' && 'h-6 w-6',
+            size === 'default' && 'h-8 w-8',
+            size === 'lg' && 'h-10 w-10',
+            size === 'xl' && 'h-12 w-12'
+          )}
+          type="button"
+          aria-label="More options"
+        >
+          <MoreHorizontal className="h-4 w-4" />
         </button>
       )}
     </TabsPrimitive.List>
@@ -177,28 +283,34 @@ const TabsList = React.forwardRef<
 
   if (scrollable) {
     return (
-      <div className="flex items-center">
+      <div className="flex items-center relative">
+        {/* Left scroll button */}
         {showScrollButtons && canScrollLeft && (
           <button
             onClick={() => scroll('left')}
-            className="flex items-center justify-center h-8 w-8 rounded hover:bg-accent"
+            className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent/50 transition-all duration-200 hover:scale-110 active:scale-95 mr-1 backdrop-blur-sm"
             type="button"
             aria-label="Scroll left"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
         )}
+        
+        {/* Scrollable container */}
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-x-auto scrollbar-hide"
+          className="flex-1 overflow-x-auto scrollbar-hide scroll-smooth"
           onScroll={checkScrollability}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {tabsList}
         </div>
+        
+        {/* Right scroll button */}
         {showScrollButtons && canScrollRight && (
           <button
             onClick={() => scroll('right')}
-            className="flex items-center justify-center h-8 w-8 rounded hover:bg-accent"
+            className="flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent/50 transition-all duration-200 hover:scale-110 active:scale-95 ml-1 backdrop-blur-sm"
             type="button"
             aria-label="Scroll right"
           >
@@ -222,51 +334,107 @@ interface TabsTriggerProps
   badge?: React.ReactNode
   tooltip?: string
   modified?: boolean
+  loading?: boolean
+  error?: boolean
+  animated?: boolean
 }
 
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   TabsTriggerProps
->(({ className, variant, size, closable, onClose, icon, badge, tooltip, modified, children, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(tabsTriggerVariants({ variant, size }), 'group relative', className)}
-    title={tooltip}
-    {...props}
-  >
-    <div className="flex items-center space-x-1.5 min-w-0">
-      {icon && (
-        <span className="flex-shrink-0 text-muted-foreground group-data-[state=active]:text-foreground">
-          {icon}
+>(({ 
+  className, 
+  variant, 
+  size, 
+  closable, 
+  onClose, 
+  icon, 
+  badge, 
+  tooltip, 
+  modified, 
+  loading,
+  error,
+  animated = true,
+  children, 
+  ...props 
+}, ref) => {
+  const [isHovered, setIsHovered] = React.useState(false)
+
+  return (
+    <TabsPrimitive.Trigger
+      ref={ref}
+      className={cn(
+        tabsTriggerVariants({ variant, size }), 
+        'group relative',
+        animated && 'transition-all duration-300',
+        error && 'border-destructive/50',
+        className
+      )}
+      title={tooltip}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      {...props}
+    >
+      {/* Background shimmer effect */}
+      {animated && isHovered && (
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
+      )}
+
+      <div className="flex items-center space-x-1.5 min-w-0 relative z-10">
+        {/* Icon with loading state */}
+        {loading ? (
+          <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+        ) : icon ? (
+          <span className="flex-shrink-0 text-muted-foreground group-data-[state=active]:text-foreground transition-colors duration-200">
+            {React.isValidElement(icon) 
+              ? React.cloneElement(icon as React.ReactElement, { 
+                  className: cn('h-4 w-4', (icon as any).props?.className) 
+                })
+              : icon
+            }
+          </span>
+        ) : null}
+
+        {/* Tab content */}
+        <span className="truncate flex items-center gap-1">
+          {children}
+          
+          {/* Modified indicator */}
+          {modified && (
+            <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-accent-orange animate-pulse-subtle" />
+          )}
+          
+          {/* Error indicator */}
+          {error && (
+            <AlertCircle className="h-3 w-3 text-destructive animate-pulse-subtle" />
+          )}
         </span>
+
+        {/* Badge */}
+        {badge && (
+          <span className="flex-shrink-0 animate-scale-in">
+            {badge}
+          </span>
+        )}
+      </div>
+
+      {/* Close button */}
+      {closable && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose?.()
+          }}
+          className="ml-2 flex-shrink-0 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-accent/50 p-0.5 transition-all duration-200 hover:scale-110 active:scale-95 relative z-10"
+          type="button"
+          aria-label="Close tab"
+        >
+          <X className="h-3 w-3" />
+        </button>
       )}
-      <span className="truncate">
-        {children}
-      </span>
-      {modified && (
-        <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-orange-500" />
-      )}
-      {badge && (
-        <span className="flex-shrink-0">
-          {badge}
-        </span>
-      )}
-    </div>
-    {closable && (
-      <button
-        onClick={(e) => {
-          e.stopPropagation()
-          onClose?.()
-        }}
-        className="ml-2 flex-shrink-0 rounded-sm opacity-0 group-hover:opacity-100 hover:bg-accent p-0.5 transition-opacity"
-        type="button"
-        aria-label="Close tab"
-      >
-        <X className="h-3 w-3" />
-      </button>
-    )}
-  </TabsPrimitive.Trigger>
-))
+    </TabsPrimitive.Trigger>
+  )
+})
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName
 
 interface TabsContentProps 
@@ -274,29 +442,56 @@ interface TabsContentProps
     VariantProps<typeof tabsContentVariants> {
   loading?: boolean
   error?: string
+  empty?: boolean
+  emptyMessage?: string
+  animated?: boolean
 }
 
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   TabsContentProps
->(({ className, variant, loading, error, children, ...props }, ref) => (
+>(({ 
+  className, 
+  variant, 
+  loading, 
+  error, 
+  empty,
+  emptyMessage = "No content available",
+  animated = true,
+  children, 
+  ...props 
+}, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className={cn(tabsContentVariants({ variant }), className)}
+    className={cn(
+      tabsContentVariants({ variant }),
+      animated && 'animate-fade-in',
+      className
+    )}
     {...props}
   >
     {loading ? (
-      <div className="flex items-center justify-center p-8">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-          <span className="text-sm text-muted-foreground">Loading...</span>
+      <div className="flex items-center justify-center p-8 min-h-[200px]">
+        <div className="flex flex-col items-center space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">Loading content...</span>
         </div>
       </div>
     ) : error ? (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <p className="text-sm text-destructive mb-2">Error loading content</p>
-          <p className="text-xs text-muted-foreground">{error}</p>
+      <div className="flex items-center justify-center p-8 min-h-[200px]">
+        <div className="text-center space-y-3">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto" />
+          <div>
+            <p className="text-sm text-destructive font-medium mb-1">Error loading content</p>
+            <p className="text-xs text-muted-foreground">{error}</p>
+          </div>
+        </div>
+      </div>
+    ) : empty ? (
+      <div className="flex items-center justify-center p-8 min-h-[200px]">
+        <div className="text-center space-y-3">
+          <FileText className="h-12 w-12 text-muted-foreground mx-auto opacity-50" />
+          <p className="text-sm text-muted-foreground">{emptyMessage}</p>
         </div>
       </div>
     ) : (
@@ -306,60 +501,182 @@ const TabsContent = React.forwardRef<
 ))
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
-// Specialized tab components
+// Enhanced specialized tab components for CollabIDE
 const FileTabs = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Root>,
   TabsProps & {
     files: Array<{
       id: string
       name: string
-      language: string
+      language?: string
       modified?: boolean
       icon?: React.ReactNode
+      error?: boolean
+      loading?: boolean
     }>
     activeFileId?: string
     onFileSelect?: (fileId: string) => void
     onFileClose?: (fileId: string) => void
     onFileAdd?: () => void
+    maxVisibleTabs?: number
   }
->(({ files, activeFileId, onFileSelect, onFileClose, onFileAdd, ...props }, ref) => (
-  <Tabs
-    ref={ref}
-    value={activeFileId}
-    onValueChange={onFileSelect}
-    {...props}
-  >
-    <TabsList 
-      variant="underline" 
-      scrollable 
-      showScrollButtons 
-      addable={!!onFileAdd} 
-      onAddTab={onFileAdd}
+>(({ 
+  files, 
+  activeFileId, 
+  onFileSelect, 
+  onFileClose, 
+  onFileAdd,
+  maxVisibleTabs = 10,
+  ...props 
+}, ref) => {
+  const getFileIcon = (language?: string) => {
+    if (!language) return <FileText className="h-4 w-4" />
+    
+    switch (language.toLowerCase()) {
+      case 'javascript':
+      case 'js':
+        return <span className="text-yellow-500">JS</span>
+      case 'typescript':
+      case 'ts':
+        return <span className="text-blue-500">TS</span>
+      case 'html':
+        return <span className="text-orange-500">HTML</span>
+      case 'css':
+        return <span className="text-blue-400">CSS</span>
+      case 'python':
+      case 'py':
+        return <span className="text-green-500">PY</span>
+      default:
+        return <Code className="h-4 w-4" />
+    }
+  }
+
+  return (
+    <Tabs
+      ref={ref}
+      value={activeFileId}
+      onValueChange={onFileSelect}
+      variant="editor"
+      animated
+      {...props}
     >
-      {files.map((file) => (
-        <TabsTrigger
-          key={file.id}
-          value={file.id}
-          variant="underline"
-          closable={files.length > 1}
-          onClose={() => onFileClose?.(file.id)}
-          icon={file.icon}
-          modified={file.modified}
-          tooltip={`${file.name} (${file.language})`}
-        >
-          {file.name}
-        </TabsTrigger>
-      ))}
+      <TabsList 
+        variant="editor" 
+        scrollable={files.length > maxVisibleTabs}
+        showScrollButtons 
+        addable={!!onFileAdd} 
+        onAddTab={onFileAdd}
+      >
+        {files.map((file) => (
+          <TabsTrigger
+            key={file.id}
+            value={file.id}
+            variant="editor"
+            size="sm"
+            closable={files.length > 1}
+            onClose={() => onFileClose?.(file.id)}
+            icon={file.icon || getFileIcon(file.language)}
+            modified={file.modified}
+            loading={file.loading}
+            error={file.error}
+            tooltip={`${file.name}${file.language ? ` (${file.language})` : ''}${file.modified ? ' - Modified' : ''}`}
+            animated
+          >
+            {file.name}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  )
+})
+FileTabs.displayName = 'FileTabs'
+
+const CollaborationTabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  TabsProps & {
+    activeUsers?: number
+    sessionType?: 'public' | 'private' | 'restricted'
+  }
+>(({ activeUsers, sessionType, children, ...props }, ref) => (
+  <Tabs ref={ref} variant="collaboration" animated glow {...props}>
+    <TabsList variant="collaboration">
+      <TabsTrigger 
+        value="code" 
+        variant="collaboration"
+        icon={<Code className="h-4 w-4" />}
+      >
+        Code Editor
+      </TabsTrigger>
+      <TabsTrigger 
+        value="collaborators" 
+        variant="collaboration"
+        icon={<Users className="h-4 w-4" />}
+        badge={activeUsers && (
+          <span className="px-1.5 py-0.5 bg-accent-purple/20 text-accent-purple text-xs rounded-full">
+            {activeUsers}
+          </span>
+        )}
+      >
+        Collaborators
+      </TabsTrigger>
+      <TabsTrigger 
+        value="terminal" 
+        variant="collaboration"
+        icon={<Terminal className="h-4 w-4" />}
+      >
+        Terminal
+      </TabsTrigger>
+      <TabsTrigger 
+        value="settings" 
+        variant="collaboration"
+        icon={<Settings className="h-4 w-4" />}
+      >
+        Settings
+      </TabsTrigger>
     </TabsList>
+    {children}
   </Tabs>
 ))
-FileTabs.displayName = 'FileTabs'
+CollaborationTabs.displayName = 'CollaborationTabs'
+
+const SessionTabs = React.forwardRef<
+  React.ElementRef<typeof TabsPrimitive.Root>,
+  TabsProps
+>(({ children, ...props }, ref) => (
+  <Tabs ref={ref} variant="session" animated {...props}>
+    <TabsList variant="session">
+      <TabsTrigger 
+        value="overview" 
+        variant="session"
+        icon={<Database className="h-4 w-4" />}
+      >
+        Overview
+      </TabsTrigger>
+      <TabsTrigger 
+        value="files" 
+        variant="session"
+        icon={<FileText className="h-4 w-4" />}
+      >
+        Files
+      </TabsTrigger>
+      <TabsTrigger 
+        value="activity" 
+        variant="session"
+        icon={<Users className="h-4 w-4" />}
+      >
+        Activity
+      </TabsTrigger>
+    </TabsList>
+    {children}
+  </Tabs>
+))
+SessionTabs.displayName = 'SessionTabs'
 
 const SettingsTabs = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Root>,
   TabsProps
 >(({ children, ...props }, ref) => (
-  <Tabs ref={ref} orientation="vertical" {...props}>
+  <Tabs ref={ref} orientation="vertical" variant="cards" animated {...props}>
     {children}
   </Tabs>
 ))
@@ -370,7 +687,9 @@ export {
   TabsList, 
   TabsTrigger, 
   TabsContent, 
-  FileTabs, 
+  FileTabs,
+  CollaborationTabs,
+  SessionTabs,
   SettingsTabs,
   tabsListVariants,
   tabsTriggerVariants,

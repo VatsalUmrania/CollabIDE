@@ -1,12 +1,11 @@
 import * as React from "react"
-
 import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 5000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -183,87 +182,17 @@ function useToast() {
     ...state,
     toast,
     dismiss: (toastId?: string) => dispatch({ type: "DISMISS_TOAST", toastId }),
+    // Enhanced toast methods for CollabIDE
+    success: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'success' }),
+    error: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'destructive' }),
+    warning: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'warning' }),
+    info: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'info' }),
+    loading: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'loading', persistent: true }),
+    collaboration: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'collaboration' }),
+    session: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'session' }),
+    code: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'code' }),
+    system: (props: Omit<Toast, 'variant'>) => toast({ ...props, variant: 'system' }),
   }
 }
 
-// Helper functions for common toast types
-const toastHelpers = {
-  success: (title: string, description?: string) => {
-    return toast({
-      variant: "success",
-      title,
-      description,
-    })
-  },
-  
-  error: (title: string, description?: string) => {
-    return toast({
-      variant: "destructive", 
-      title,
-      description,
-    })
-  },
-  
-  warning: (title: string, description?: string) => {
-    return toast({
-      variant: "warning",
-      title,
-      description,
-    })
-  },
-  
-  info: (title: string, description?: string) => {
-    return toast({
-      variant: "info",
-      title,
-      description,
-    })
-  },
-  
-  loading: (title: string, description?: string) => {
-    return toast({
-      variant: "loading",
-      title,
-      description,
-      duration: Infinity, // Don't auto-dismiss loading toasts
-    })
-  },
-  
-  promise: async <T,>(
-    promise: Promise<T>,
-    {
-      loading: loadingMessage,
-      success: successMessage,
-      error: errorMessage,
-    }: {
-      loading: string
-      success: string | ((data: T) => string)
-      error: string | ((error: any) => string)
-    }
-  ) => {
-    const toastId = toast({
-      variant: "loading",
-      title: loadingMessage,
-      duration: Infinity,
-    }).id
-
-    try {
-      const data = await promise
-      toast({
-        id: toastId,
-        variant: "success",
-        title: typeof successMessage === "function" ? successMessage(data) : successMessage,
-      })
-      return data
-    } catch (error) {
-      toast({
-        id: toastId,
-        variant: "destructive",
-        title: typeof errorMessage === "function" ? errorMessage(error) : errorMessage,
-      })
-      throw error
-    }
-  }
-}
-
-export { useToast, toast, toastHelpers }
+export { useToast, toast }

@@ -5,12 +5,24 @@ import { useAuth } from '@/contexts/auth-context'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Mail, CheckCircle, ArrowLeft, Shield, Clock, RefreshCw } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
-import { GuestRoute } from '@/components/ProtectedRoute'
+import HeroLogo from '@/components/ui/hero-logo'
+import { 
+  Loader2, 
+  Mail, 
+  CheckCircle, 
+  ArrowLeft, 
+  Shield, 
+  Clock, 
+  RefreshCw,
+  AlertCircle,
+  Sparkles,
+  Key,
+  Timer
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 
 export default function VerifyPage() {
@@ -22,13 +34,17 @@ export default function VerifyPage() {
   const [isVerified, setIsVerified] = useState(false)
   
   const { verify } = useAuth()
-  const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email') || ''
   
   // Refs for OTP inputs
   const inputRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  // Simple toast replacement
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    console.log(`${type.toUpperCase()}: ${message}`)
+  }
 
   useEffect(() => {
     if (!email) {
@@ -122,24 +138,16 @@ export default function VerifyPage() {
       await verify(email, otpCode)
       setIsVerified(true)
       
-      toast({
-        variant: "success",
-        title: "Email verified successfully!",
-        description: "Welcome to CollabIDE. Redirecting to dashboard...",
-      })
+      showToast("Email verified successfully! Welcome to CollabIDE.", 'success')
 
       // Redirect after a short delay to show success state
       setTimeout(() => {
         router.push('/dashboard')
-      }, 1500)
+      }, 2000)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Verification failed'
       setError(errorMessage)
-      toast({
-        variant: "destructive",
-        title: "Verification failed",
-        description: errorMessage,
-      })
+      showToast(errorMessage, 'error')
       
       // Clear OTP on error
       setOtp(['', '', '', '', '', ''])
@@ -166,11 +174,7 @@ export default function VerifyPage() {
         throw new Error(data.error || 'Failed to resend code')
       }
 
-      toast({
-        variant: "success",
-        title: "Verification code sent",
-        description: "Please check your email for the new code",
-      })
+      showToast("Verification code sent! Please check your email.", 'success')
 
       setCountdown(60) // 60 second cooldown
       setOtp(['', '', '', '', '', '']) // Clear current OTP
@@ -178,11 +182,7 @@ export default function VerifyPage() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to resend code'
       setError(errorMessage)
-      toast({
-        variant: "destructive",
-        title: "Failed to resend",
-        description: errorMessage,
-      })
+      showToast(errorMessage, 'error')
     } finally {
       setResending(false)
     }
@@ -196,180 +196,259 @@ export default function VerifyPage() {
 
   if (isVerified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-emerald-100 py-12 px-4">
-        <Card className="w-full max-w-md text-center glass-card shadow-xl border-0">
-          <CardHeader className="pb-6">
-            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-green-500 to-emerald-500 rounded-3xl mb-6 mx-auto">
-              <CheckCircle className="h-10 w-10 text-white" />
-            </div>
-            <CardTitle className="text-2xl font-bold text-green-900 mb-2">
-              Email Verified!
-            </CardTitle>
-            <CardDescription className="text-green-700">
-              Your account has been successfully verified. Redirecting to dashboard...
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center space-x-2 text-green-600">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Setting up your account...</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <main className="min-h-screen w-full flex items-center justify-center p-4 auth-bg">
+        <div className="w-full max-w-md">
+          <Card variant="glass" className="rounded-3xl animate-fade-in-scale shadow-2xl">
+            <CardHeader className="text-center pb-6">
+              <div className="flex justify-center mb-6">
+                <HeroLogo 
+                  size="lg" 
+                  variant="compact" 
+                  className="animate-float"
+                />
+              </div>
+              
+              <div className="mx-auto mb-6 p-4 bg-success/10 rounded-full w-fit animate-scale-in">
+                <CheckCircle className="h-16 w-16 text-success animate-pulse-subtle" />
+              </div>
+              
+              <h1 className="text-3xl font-bold gradient-text mb-3">
+                Email Verified!
+              </h1>
+              <p className="text-muted-foreground text-lg leading-relaxed">
+                Welcome to CollabIDE! Your account is ready.
+              </p>
+            </CardHeader>
+            
+            <CardContent className="space-y-6">
+              {/* Success Animation */}
+              <div className="flex items-center justify-center space-x-3 p-4 rounded-xl bg-success/5 border border-success/20">
+                <Sparkles className="h-5 w-5 text-success animate-spin" style={{ animationDuration: '3s' }} />
+                <span className="text-sm text-success font-medium">Setting up your workspace...</span>
+                <Loader2 className="h-4 w-4 animate-spin text-success" />
+              </div>
+
+              {/* Welcome Features */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                {[
+                  { icon: Shield, label: 'Secure', color: 'text-success' },
+                  { icon: Sparkles, label: 'Ready', color: 'text-primary' },
+                  { icon: CheckCircle, label: 'Verified', color: 'text-success' }
+                ].map(({ icon: Icon, label, color }, index) => (
+                  <div 
+                    key={label}
+                    className="flex flex-col items-center space-y-2 p-3 rounded-lg bg-muted/20 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.2}s` }}
+                  >
+                    <Icon className={`h-6 w-6 ${color}`} />
+                    <span className="text-xs text-muted-foreground font-medium">{label}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     )
   }
 
   return (
-    <GuestRoute>
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
-        <div className="w-full max-w-md">
-          {/* Back button */}
-          <Link href="/auth/register" className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700 mb-8 transition-colors">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Registration
-          </Link>
+    <main className="min-h-screen w-full flex items-center justify-center p-4 auth-bg">
+      <div className="w-full max-w-md">
+        {/* Back button */}
+        <Link 
+          href="/auth/register" 
+          className="inline-flex items-center text-sm text-muted-foreground hover:text-primary mb-8 transition-colors duration-200 group"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform duration-300" />
+          Back to Registration
+        </Link>
 
-          <Card className="glass-card shadow-xl border-0">
-            <CardHeader className="text-center pb-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-2xl mb-6 mx-auto">
-                <Mail className="h-8 w-8 text-white" />
-              </div>
-              <CardTitle className="text-2xl font-bold text-slate-900 mb-2">
-                Verify Your Email
-              </CardTitle>
-              <CardDescription className="text-base">
-                We sent a 6-digit verification code to
-              </CardDescription>
-              <Badge variant="outline" className="mt-2 bg-blue-50 border-blue-200 text-blue-800">
-                {formatEmail(email)}
-              </Badge>
-            </CardHeader>
+        <Card variant="glass" className="rounded-3xl animate-fade-in-scale shadow-2xl">
+          <CardHeader className="text-center pb-6">
+            <div className="flex justify-center mb-6">
+              <HeroLogo 
+                size="lg" 
+                variant="compact" 
+                className="animate-float"
+              />
+            </div>
             
-            <CardContent className="space-y-6">
-              {error && (
-                <Alert variant="destructive" className="animate-slide-up">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              
-              {/* OTP Input Grid */}
-              <div className="space-y-4">
-                <label className="block text-sm font-medium text-slate-700 text-center">
-                  Enter Verification Code
-                </label>
-                <div className="flex justify-center space-x-3">
-                  {otp.map((digit, index) => (
-                    <Input
-                      key={index}
-                      ref={(el) => inputRefs.current[index] = el}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      className="w-12 h-12 text-center text-lg font-semibold border-2 focus:border-blue-500 transition-colors"
-                      disabled={loading || isVerified}
-                    />
-                  ))}
+            <div className="mx-auto mb-6 p-4 bg-info/10 rounded-full w-fit">
+              <Key className="h-10 w-10 text-info animate-pulse-subtle" />
+            </div>
+            
+            <h1 className="text-3xl font-bold gradient-text mb-3">
+              Verify Your Email
+            </h1>
+            <p className="text-muted-foreground text-lg leading-relaxed mb-4">
+              We sent a 6-digit verification code to
+            </p>
+            <Badge 
+              variant="outline" 
+              className="bg-info/10 border-info/30 text-info px-3 py-1 text-sm font-mono"
+            >
+              {formatEmail(email)}
+            </Badge>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <Alert variant="destructive" className="animate-slide-down">
+                <AlertDescription className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                  <span className="text-sm">{error}</span>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {/* OTP Input Grid */}
+            <div className="space-y-4">
+              <label className="block text-sm font-medium text-foreground text-center">
+                Enter Verification Code
+              </label>
+              <div className="flex justify-center space-x-3">
+                {otp.map((digit, index) => (
+                  <Input
+                    key={index}
+                    ref={(el) => inputRefs.current[index] = el}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleOtpChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className={cn(
+                      "w-14 h-14 text-center text-xl font-bold border-2 transition-all duration-300 rounded-xl bg-card/50 backdrop-blur-sm",
+                      digit ? "border-primary bg-primary/5" : "border-border/50 hover:border-primary/50",
+                      "focus:border-primary focus:bg-card focus:scale-105"
+                    )}
+                    disabled={loading || isVerified}
+                  />
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                You can paste your code or type each digit individually
+              </p>
+            </div>
+
+            {/* Submit Button */}
+            <Button 
+              onClick={() => handleSubmit()}
+              size="lg"
+              className="w-full h-14 text-base font-semibold bg-gradient-to-r from-info via-primary to-accent-blue hover:from-info/90 hover:via-primary/90 hover:to-accent-blue/90 transition-all duration-300 shadow-lg hover:shadow-xl rounded-xl group"
+              disabled={loading || otp.some(d => d === '') || isVerified}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center">
+                  <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                  <span>Verifying Code...</span>
                 </div>
-                <p className="text-xs text-slate-500 text-center">
-                  Paste your code or type each digit individually
+              ) : (
+                <div className="flex items-center justify-center">
+                  <Shield className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>Verify Email</span>
+                  <CheckCircle className="ml-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
+                </div>
+              )}
+            </Button>
+
+            {/* Resend Section */}
+            <div className="pt-6 border-t border-border/30">
+              <div className="text-center space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Didn&apos;t receive the code?
+                </p>
+                
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={handleResend}
+                  disabled={resending || countdown > 0 || loading}
+                  className="w-full h-12 rounded-xl bg-card/50 border-border/50 hover:border-primary/50 hover:bg-card transition-all duration-300 group"
+                >
+                  {resending ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <span>Sending New Code...</span>
+                    </div>
+                  ) : countdown > 0 ? (
+                    <div className="flex items-center justify-center">
+                      <Timer className="mr-2 h-4 w-4 text-warning" />
+                      <span>Resend in {countdown}s</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center">
+                      <RefreshCw className="mr-2 h-4 w-4 group-hover:rotate-180 transition-transform duration-300" />
+                      <span>Send New Code</span>
+                    </div>
+                  )}
+                </Button>
+                
+                <p className="text-xs text-muted-foreground">
+                  Check your spam folder if you don&apos;t see the email
                 </p>
               </div>
+            </div>
 
-              {/* Submit Button */}
-              <Button 
-                onClick={() => handleSubmit()}
-                className="w-full h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-                disabled={loading || otp.some(d => d === '') || isVerified}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="mr-2 h-5 w-5" />
-                    Verify Email
-                  </>
-                )}
-              </Button>
+            {/* Help Section */}
+            <div className="p-4 rounded-xl bg-info/5 border border-info/20 backdrop-blur-sm">
+              <div className="flex items-start space-x-3">
+                <Mail className="h-5 w-5 text-info mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-info">
+                    Having trouble receiving the code?
+                  </h4>
+                  <ul className="text-xs text-muted-foreground space-y-1 leading-relaxed">
+                    <li>• Check your spam/junk folder</li>
+                    <li>• Ensure {formatEmail(email)} is correct</li>
+                    <li>• Try requesting a new code</li>
+                    <li>• Wait a few minutes for delivery</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
 
-              {/* Resend Section */}
-              <div className="border-t border-slate-200 pt-6">
-                <div className="text-center space-y-3">
-                  <p className="text-sm text-slate-600">
-                    Didn't receive the code?
+            {/* Security Notice */}
+            <div className="p-4 rounded-xl bg-muted/20 backdrop-blur-sm border border-border/30">
+              <div className="flex items-start space-x-3">
+                <Clock className="h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">
+                    Security Notice
                   </p>
-                  
-                  <div className="flex flex-col space-y-2">
-                    <Button
-                      variant="outline"
-                      onClick={handleResend}
-                      disabled={resending || countdown > 0 || loading}
-                      className="w-full border-blue-200 text-blue-600 hover:bg-blue-50"
-                    >
-                      {resending ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Sending new code...
-                        </>
-                      ) : countdown > 0 ? (
-                        <>
-                          <Clock className="mr-2 h-4 w-4" />
-                          Resend in {countdown}s
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          Send New Code
-                        </>
-                      )}
-                    </Button>
-                    
-                    <p className="text-xs text-slate-500">
-                      Check your spam folder if you don't see the email
-                    </p>
-                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Verification codes expire after 10 minutes for your security. 
+                    You&apos;ll need to request a new code if this one expires.
+                  </p>
                 </div>
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              {/* Help Section */}
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <div className="flex items-start space-x-3">
-                  <div className="flex-shrink-0">
-                    <Mail className="h-5 w-5 text-blue-600 mt-0.5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-900 mb-1">
-                      Having trouble?
-                    </h4>
-                    <ul className="text-xs text-blue-700 space-y-1">
-                      <li>• Check your spam/junk folder</li>
-                      <li>• Make sure {email} is correct</li>
-                      <li>• Try resending the code</li>
-                      <li>• Contact support if issues persist</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        {/* Additional Help */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-muted-foreground">
+            Need help? {' '}
+            <Link 
+              href="/support" 
+              className="text-primary hover:text-primary/80 font-medium hover:underline transition-colors"
+            >
+              Contact Support →
+            </Link>
+          </p>
+        </div>
 
-          {/* Additional Help */}
-          <div className="text-center mt-6">
-            <p className="text-sm text-slate-600">
-              Need help? {' '}
-              <Link href="/support" className="text-blue-600 hover:text-blue-700 font-medium">
-                Contact Support
-              </Link>
-            </p>
+        {/* CollabIDE Branding */}
+        <div className="flex justify-center mt-6">
+          <div className="inline-flex items-center space-x-2 text-xs text-muted-foreground bg-card/30 px-4 py-2 rounded-full backdrop-blur-sm border border-border/20">
+            <Shield className="h-3 w-3 text-success" />
+            <span>Secure verification powered by CollabIDE</span>
           </div>
         </div>
       </div>
-    </GuestRoute>
+    </main>
   )
 }

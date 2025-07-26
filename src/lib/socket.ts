@@ -3,6 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next'
 import { Server as ServerIO } from 'socket.io'
 import { prisma } from './db'
 import { verifyToken } from './auth'
+import { Socket } from 'socket.io';
 
 export type NextApiResponseServerIO = NextApiResponse & {
   socket: Socket & {
