@@ -63,10 +63,10 @@ export default function FileTabs({
 
   const getTabClasses = (file: any, isActive: boolean) => {
     return cn(
-      "group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 whitespace-nowrap relative overflow-hidden backdrop-blur-sm",
+      "group flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap relative overflow-hidden",
       isActive 
-        ? "bg-primary/10 text-primary border border-primary/30 shadow-sm glass-card" 
-        : "hover:bg-card/50 text-muted-foreground hover:text-foreground hover:border-border/50 border border-transparent",
+        ? "bg-blue-900/30 text-blue-300 border border-blue-600" 
+        : "hover:bg-gray-800 text-gray-400 hover:text-gray-200 hover:border-gray-600 border border-transparent",
       isMobile ? "px-2 py-1.5 text-xs" : "px-3 py-2 text-sm"
     );
   };
@@ -74,7 +74,7 @@ export default function FileTabs({
   const canExecute = activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable;
 
   return (
-    <div className="glass-card border-b border-border/30 flex items-center justify-between px-4 py-3 backdrop-blur-sm">
+    <div className="bg-gray-800 border-b border-gray-700 flex items-center justify-between px-4 py-3">
       {/* File Tabs Section */}
       <div className="flex items-center flex-1 min-w-0">
         {/* Scroll Left Button */}
@@ -83,7 +83,7 @@ export default function FileTabs({
             variant="ghost"
             size="sm"
             onClick={() => scrollTabs('left')}
-            className="mr-2 hover:bg-accent/50 transition-all duration-200"
+            className="mr-2 hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className="h-4 w-4 rotate-180" />
           </Button>
@@ -103,7 +103,7 @@ export default function FileTabs({
           }}
         >
           {files.length === 0 ? (
-            <div className="flex items-center space-x-2 text-muted-foreground">
+            <div className="flex items-center space-x-2 text-gray-500">
               <File className="h-4 w-4 opacity-50" />
               <span className={cn("italic", isMobile ? "text-xs" : "text-sm")}>
                 No files yet
@@ -123,7 +123,7 @@ export default function FileTabs({
                 >
                   {/* Language Icon */}
                   <span className={cn(
-                    "transition-transform duration-200 group-hover:scale-110",
+                    "transition-colors",
                     isMobile ? "text-sm" : "text-base"
                   )}>
                     {config?.icon || '📄'}
@@ -142,8 +142,8 @@ export default function FileTabs({
                     <Badge 
                       variant="secondary" 
                       className={cn(
-                        "text-xs opacity-70 group-hover:opacity-100 transition-opacity duration-200",
-                        isActive && "bg-primary/20 text-primary"
+                        "text-xs opacity-70 group-hover:opacity-100 transition-opacity",
+                        isActive && "bg-blue-800/50 text-blue-300"
                       )}
                     >
                       {config?.name || file.language}
@@ -158,7 +158,7 @@ export default function FileTabs({
                         deleteFile(file.id);
                       }}
                       className={cn(
-                        "ml-1 hover:bg-destructive/10 hover:text-destructive rounded-full p-1 transition-all duration-200 opacity-0 group-hover:opacity-100",
+                        "ml-1 hover:bg-red-900/30 hover:text-red-400 rounded-full p-1 transition-colors opacity-0 group-hover:opacity-100",
                         isActive && "opacity-70"
                       )}
                       title="Delete file"
@@ -178,7 +178,7 @@ export default function FileTabs({
             variant="ghost"
             size="sm"
             onClick={() => scrollTabs('right')}
-            className="ml-2 hover:bg-accent/50 transition-all duration-200"
+            className="ml-2 hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -197,7 +197,7 @@ export default function FileTabs({
             variant="outline"
             onClick={showNewFileModal}
             disabled={fileCreationLoading}
-            className="glass-card backdrop-blur-sm hover:bg-card/50 hover:border-primary/50 transition-all duration-300 group"
+            className="hover:bg-gray-700 hover:border-blue-500 transition-colors"
           >
             {fileCreationLoading ? (
               <>
@@ -206,7 +206,7 @@ export default function FileTabs({
               </>
             ) : (
               <>
-                <Plus className={cn("group-hover:rotate-180 transition-transform duration-300", isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
+                <Plus className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
                 {isMobile ? "New" : "New File"}
               </>
             )}
@@ -219,7 +219,7 @@ export default function FileTabs({
             size={isMobile ? "sm" : "default"}
             onClick={executeCode}
             disabled={isExecuting}
-            className="bg-gradient-to-r from-success via-accent-emerald to-accent-green hover:from-success/90 hover:via-accent-emerald/90 hover:to-accent-green/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group"
+            className="bg-green-600 hover:bg-green-700 text-white transition-colors"
           >
             {isExecuting ? (
               <>
@@ -228,7 +228,7 @@ export default function FileTabs({
               </>
             ) : (
               <>
-                <Play className={cn("group-hover:scale-110 transition-transform duration-200", isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
+                <Play className={cn(isMobile ? "h-3 w-3 mr-1" : "h-4 w-4 mr-2")} />
                 {isMobile ? "Run" : "Run Code"}
               </>
             )}
@@ -237,8 +237,8 @@ export default function FileTabs({
 
         {/* Execute Indicator */}
         {canExecute && (
-          <div className="hidden sm:flex items-center space-x-1 text-xs text-muted-foreground">
-            <Zap className="h-3 w-3 text-success" />
+          <div className="hidden sm:flex items-center space-x-1 text-xs text-gray-400">
+            <Zap className="h-3 w-3 text-green-400" />
             <span>Executable</span>
           </div>
         )}

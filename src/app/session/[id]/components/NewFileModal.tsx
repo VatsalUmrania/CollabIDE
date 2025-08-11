@@ -1,3 +1,322 @@
+// import { useState, useEffect } from 'react';
+// import { X, Plus, Loader2, AlertCircle, File, Code2, Sparkles } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { Input } from '@/components/ui/input';
+// import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+// import { Alert, AlertDescription } from '@/components/ui/alert';
+// import { Card, CardContent, CardHeader } from '@/components/ui/card';
+// import { Badge } from '@/components/ui/badge';
+// import { languageConfigs } from '../utils/languageConfigs';
+// import { cn } from '@/lib/utils';
+
+// interface NewFileModalProps {
+//   newFileName: string;
+//   setNewFileName: (name: string) => void;
+//   newFileLanguage: string;
+//   setNewFileLanguage: (lang: string) => void;
+//   fileCreationLoading: boolean;
+//   createNewFile: () => void;
+//   files: any[];
+//   closeModal: () => void;
+// }
+
+// export default function NewFileModal({
+//   newFileName,
+//   setNewFileName,
+//   newFileLanguage,
+//   setNewFileLanguage,
+//   fileCreationLoading,
+//   createNewFile,
+//   files,
+//   closeModal
+// }: NewFileModalProps) {
+//   const [error, setError] = useState('');
+//   const [isMobile, setIsMobile] = useState(false);
+
+//   // Check for mobile viewport
+//   useEffect(() => {
+//     const checkMobile = () => {
+//       setIsMobile(window.innerWidth < 768);
+//     };
+    
+//     checkMobile();
+//     window.addEventListener('resize', checkMobile);
+//     return () => window.removeEventListener('resize', checkMobile);
+//   }, []);
+
+//   // Prevent background scroll when modal is open
+//   useEffect(() => {
+//     document.body.style.overflow = 'hidden';
+//     return () => {
+//       document.body.style.overflow = 'unset';
+//     };
+//   }, []);
+
+//   // Simple toast replacement
+//   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+//     console.log(`${type.toUpperCase()}: ${message}`);
+//   };
+
+//   const validateAndCreate = () => {
+//     setError('');
+    
+//     if (!newFileName.trim()) {
+//       setError('File name is required');
+//       return;
+//     }
+    
+//     if (files.some(file => file.name === newFileName.trim())) {
+//       setError('A file with this name already exists');
+//       return;
+//     }
+    
+//     if (!/^[a-zA-Z0-9_.-]+$/.test(newFileName.trim())) {
+//       setError('File name contains invalid characters. Use only letters, numbers, dots, hyphens, and underscores.');
+//       return;
+//     }
+
+//     if (!newFileLanguage) {
+//       setError('Please select a programming language');
+//       return;
+//     }
+    
+//     createNewFile();
+//   };
+
+//   const handleKeyPress = (e: React.KeyboardEvent) => {
+//     if (e.key === 'Enter' && !fileCreationLoading) {
+//       validateAndCreate();
+//     }
+//     if (e.key === 'Escape') {
+//       closeModal();
+//     }
+//   };
+
+//   // Auto-detect language from file extension
+//   const handleFileNameChange = (name: string) => {
+//     setNewFileName(name);
+//     setError(''); // Clear errors when user types
+    
+//     // Auto-detect language from extension
+//     const extension = name.split('.').pop()?.toLowerCase();
+//     if (extension) {
+//       const detectedLanguage = Object.entries(languageConfigs).find(
+//         ([_, config]) => config.extension === extension
+//       );
+//       if (detectedLanguage && !newFileLanguage) {
+//         setNewFileLanguage(detectedLanguage[0]);
+//       }
+//     }
+//   };
+
+//   const getSelectedLanguageConfig = () => {
+//     return languageConfigs[newFileLanguage as keyof typeof languageConfigs];
+//   };
+
+//   const isFormValid = newFileName.trim() && newFileLanguage && !fileCreationLoading;
+
+//   return (
+//     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+//       <Card 
+//         className={cn(
+//           "w-full max-w-md glass-card shadow-2xl animate-fade-in-scale border-primary/20",
+//           isMobile ? "mx-4" : "mx-auto"
+//         )}
+//       >
+//         <CardHeader className="pb-4">
+//           <div className="flex justify-between items-start">
+//             <div className="flex items-center space-x-3">
+//               <div className="p-2 bg-primary/10 rounded-lg">
+//                 <File className="h-6 w-6 text-primary" />
+//               </div>
+//               <div>
+//                 <h2 className="text-xl font-bold text-foreground">Create New File</h2>
+//                 <p className="text-sm text-muted-foreground">
+//                   Add a new file to your collaborative session
+//                 </p>
+//               </div>
+//             </div>
+//             <Button 
+//               variant="ghost" 
+//               size="sm" 
+//               onClick={closeModal}
+//               disabled={fileCreationLoading}
+//               className="hover:bg-destructive/10 hover:text-destructive transition-all duration-200 rounded-full"
+//             >
+//               <X className="h-5 w-5" />
+//             </Button>
+//           </div>
+//         </CardHeader>
+        
+//         <CardContent className="space-y-6">
+//           {/* Error Alert */}
+//           {error && (
+//             <Alert variant="destructive" className="animate-slide-down glass-card backdrop-blur-sm">
+//               <AlertCircle className="h-4 w-4" />
+//               <AlertDescription className="font-medium">{error}</AlertDescription>
+//             </Alert>
+//           )}
+          
+//           {/* File Name Input */}
+//           <div className="space-y-3">
+//             <label className="block text-sm font-semibold text-foreground">
+//               File Name
+//               <Badge variant="destructive" className="ml-2 text-xs">Required</Badge>
+//             </label>
+//             <Input
+//               type="text"
+//               value={newFileName}
+//               onChange={(e) => handleFileNameChange(e.target.value)}
+//               placeholder="e.g., main.js, style.css, index.html"
+//               className="w-full h-12 text-base glass-card backdrop-blur-sm border-border/50 focus:border-primary/50 transition-all duration-300"
+//               onKeyPress={handleKeyPress}
+//               disabled={fileCreationLoading}
+//               autoFocus
+//             />
+//             <div className="flex justify-between items-center">
+//               <p className="text-xs text-muted-foreground">
+//                 Use only letters, numbers, dots, hyphens, and underscores
+//               </p>
+//               {newFileName && (
+//                 <div className="flex items-center space-x-1 text-xs">
+//                   <div className={cn(
+//                     "w-2 h-2 rounded-full",
+//                     /^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "bg-success" : "bg-destructive"
+//                   )} />
+//                   <span className={cn(
+//                     "font-medium",
+//                     /^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "text-success" : "text-destructive"
+//                   )}>
+//                     {/^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "Valid" : "Invalid"}
+//                   </span>
+//                 </div>
+//               )}
+//             </div>
+//           </div>
+          
+//           {/* Language Selection */}
+//           <div className="space-y-3">
+//             <label className="block text-sm font-semibold text-foreground">
+//               Programming Language
+//               <Badge variant="destructive" className="ml-2 text-xs">Required</Badge>
+//             </label>
+//             <Select 
+//               value={newFileLanguage} 
+//               onValueChange={setNewFileLanguage}
+//               disabled={fileCreationLoading}
+//             >
+//               <SelectTrigger className="w-full h-12 glass-card backdrop-blur-sm border-border/50 focus:border-primary/50">
+//                 <SelectValue placeholder="Select a programming language">
+//                   {newFileLanguage && getSelectedLanguageConfig() && (
+//                     <div className="flex items-center space-x-2">
+//                       <span className="text-lg">{getSelectedLanguageConfig().icon}</span>
+//                       <span>{getSelectedLanguageConfig().name}</span>
+//                     </div>
+//                   )}
+//                 </SelectValue>
+//               </SelectTrigger>
+//               <SelectContent className="glass-card backdrop-blur-sm max-h-60">
+//                 {Object.entries(languageConfigs).map(([key, config]) => (
+//                   <SelectItem key={key} value={key} className="hover:bg-accent/50 transition-colors duration-200">
+//                     <div className="flex items-center space-x-3 w-full">
+//                       <span className="text-lg">{config.icon}</span>
+//                       <div className="flex-1">
+//                         <span className="font-medium">{config.name}</span>
+//                         <div className="flex items-center space-x-2 mt-1">
+//                           <Badge variant="outline" className="text-xs bg-muted/50">
+//                             .{config.extension}
+//                           </Badge>
+//                           {config.executable && (
+//                             <Badge variant="default" className="text-xs bg-success/20 text-success border-success/30">
+//                               Executable
+//                             </Badge>
+//                           )}
+//                         </div>
+//                       </div>
+//                     </div>
+//                   </SelectItem>
+//                 ))}
+//               </SelectContent>
+//             </Select>
+//             {newFileLanguage && (
+//               <div className="p-3 bg-info/5 border border-info/20 rounded-lg backdrop-blur-sm">
+//                 <div className="flex items-start space-x-2">
+//                   <Code2 className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
+//                   <div>
+//                     <p className="text-sm font-medium text-info">
+//                       {getSelectedLanguageConfig().name} Selected
+//                     </p>
+//                     <p className="text-xs text-muted-foreground">
+//                       Files will be created with .{getSelectedLanguageConfig().extension} extension
+//                       {getSelectedLanguageConfig().executable && " and can be executed"}
+//                     </p>
+//                   </div>
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+
+//           {/* File Preview */}
+//           {newFileName && newFileLanguage && (
+//             <div className="p-4 bg-muted/20 rounded-lg backdrop-blur-sm border border-border/30">
+//               <div className="flex items-center space-x-3">
+//                 <div className="p-2 bg-primary/10 rounded-lg">
+//                   <span className="text-lg">{getSelectedLanguageConfig().icon}</span>
+//                 </div>
+//                 <div className="flex-1 min-w-0">
+//                   <p className="text-sm font-medium text-foreground">Preview:</p>
+//                   <p className="text-lg font-mono text-primary truncate">
+//                     {newFileName.includes('.') ? newFileName : `${newFileName}.${getSelectedLanguageConfig().extension}`}
+//                   </p>
+//                 </div>
+//               </div>
+//             </div>
+//           )}
+//         </CardContent>
+        
+//         {/* Action Buttons */}
+//         <div className="flex justify-end space-x-3 p-6 border-t border-border/30 bg-card/30 backdrop-blur-sm rounded-b-xl">
+//           <Button 
+//             variant="outline" 
+//             onClick={closeModal}
+//             disabled={fileCreationLoading}
+//             className="glass-card backdrop-blur-sm hover:bg-card/50 transition-all duration-200"
+//           >
+//             Cancel
+//           </Button>
+//           <Button 
+//             onClick={validateAndCreate}
+//             disabled={!isFormValid}
+//             className="bg-gradient-to-r from-primary via-accent-purple to-accent-blue hover:from-primary/90 hover:via-accent-purple/90 hover:to-accent-blue/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group min-w-[120px]"
+//           >
+//             {fileCreationLoading ? (
+//               <>
+//                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+//                 Creating...
+//               </>
+//             ) : (
+//               <>
+//                 <Plus className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-300" />
+//                 Create File
+//               </>
+//             )}
+//           </Button>
+//         </div>
+
+//         {/* Existing Files Count */}
+//         {files.length > 0 && (
+//           <div className="absolute top-2 right-12">
+//             <Badge variant="secondary" className="bg-muted/50 text-xs">
+//               {files.length} existing files
+//             </Badge>
+//           </div>
+//         )}
+//       </Card>
+//     </div>
+//   );
+// }
+
+
 import { useState, useEffect } from 'react';
 import { X, Plus, Loader2, AlertCircle, File, Code2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -116,22 +435,33 @@ export default function NewFileModal({
   const isFormValid = newFileName.trim() && newFileLanguage && !fileCreationLoading;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
       <Card 
         className={cn(
-          "w-full max-w-md glass-card shadow-2xl animate-fade-in-scale border-primary/20",
+          "w-full max-w-md shadow-lg",
           isMobile ? "mx-4" : "mx-auto"
         )}
       >
         <CardHeader className="pb-4">
           <div className="flex justify-between items-start">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <File className="h-6 w-6 text-primary" />
+            <div className="flex items-center space-x-3 flex-1">
+              <div className="p-2 bg-blue-900/30 rounded-lg">
+                <File className="h-6 w-6 text-blue-400" />
               </div>
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Create New File</h2>
-                <p className="text-sm text-muted-foreground">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">Create New File</h2>
+                  {/* Better positioned existing files badge */}
+                  {files.length > 0 && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-xs text-gray-400">Existing:</span>
+                      <div className="w-6 h-6 bg-blue-600 text-white text-xs font-semibold rounded-full flex items-center justify-center border border-blue-700">
+                        {files.length > 99 ? '99+' : files.length}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-400">
                   Add a new file to your collaborative session
                 </p>
               </div>
@@ -141,7 +471,7 @@ export default function NewFileModal({
               size="sm" 
               onClick={closeModal}
               disabled={fileCreationLoading}
-              className="hover:bg-destructive/10 hover:text-destructive transition-all duration-200 rounded-full"
+              className="hover:bg-red-900/30 hover:text-red-300 transition-colors rounded-full ml-2"
             >
               <X className="h-5 w-5" />
             </Button>
@@ -149,9 +479,35 @@ export default function NewFileModal({
         </CardHeader>
         
         <CardContent className="space-y-6">
+          {/* Show existing files info when there are files */}
+          {files.length > 0 && (
+            <div className="p-3 bg-gray-800 border border-gray-700 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <File className="h-4 w-4 text-gray-400" />
+                  <span className="text-sm text-gray-300">
+                    {files.length} existing file{files.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Names must be unique
+                </div>
+              </div>
+              {files.length <= 5 && (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {files.map((file: any, index: number) => (
+                    <Badge key={index} variant="outline" className="text-xs bg-gray-700 text-gray-300">
+                      {file.name}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive" className="animate-slide-down glass-card backdrop-blur-sm">
+            <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="font-medium">{error}</AlertDescription>
             </Alert>
@@ -159,7 +515,7 @@ export default function NewFileModal({
           
           {/* File Name Input */}
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-foreground">
+            <label className="block text-sm font-semibold text-white">
               File Name
               <Badge variant="destructive" className="ml-2 text-xs">Required</Badge>
             </label>
@@ -168,24 +524,24 @@ export default function NewFileModal({
               value={newFileName}
               onChange={(e) => handleFileNameChange(e.target.value)}
               placeholder="e.g., main.js, style.css, index.html"
-              className="w-full h-12 text-base glass-card backdrop-blur-sm border-border/50 focus:border-primary/50 transition-all duration-300"
+              className="w-full h-12 text-base"
               onKeyPress={handleKeyPress}
               disabled={fileCreationLoading}
               autoFocus
             />
             <div className="flex justify-between items-center">
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-gray-400">
                 Use only letters, numbers, dots, hyphens, and underscores
               </p>
               {newFileName && (
                 <div className="flex items-center space-x-1 text-xs">
                   <div className={cn(
                     "w-2 h-2 rounded-full",
-                    /^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "bg-success" : "bg-destructive"
+                    /^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "bg-green-400" : "bg-red-400"
                   )} />
                   <span className={cn(
                     "font-medium",
-                    /^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "text-success" : "text-destructive"
+                    /^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "text-green-400" : "text-red-400"
                   )}>
                     {/^[a-zA-Z0-9_.-]+$/.test(newFileName.trim()) ? "Valid" : "Invalid"}
                   </span>
@@ -196,7 +552,7 @@ export default function NewFileModal({
           
           {/* Language Selection */}
           <div className="space-y-3">
-            <label className="block text-sm font-semibold text-foreground">
+            <label className="block text-sm font-semibold text-white">
               Programming Language
               <Badge variant="destructive" className="ml-2 text-xs">Required</Badge>
             </label>
@@ -205,7 +561,7 @@ export default function NewFileModal({
               onValueChange={setNewFileLanguage}
               disabled={fileCreationLoading}
             >
-              <SelectTrigger className="w-full h-12 glass-card backdrop-blur-sm border-border/50 focus:border-primary/50">
+              <SelectTrigger className="w-full h-12">
                 <SelectValue placeholder="Select a programming language">
                   {newFileLanguage && getSelectedLanguageConfig() && (
                     <div className="flex items-center space-x-2">
@@ -215,19 +571,19 @@ export default function NewFileModal({
                   )}
                 </SelectValue>
               </SelectTrigger>
-              <SelectContent className="glass-card backdrop-blur-sm max-h-60">
+              <SelectContent className="max-h-60">
                 {Object.entries(languageConfigs).map(([key, config]) => (
-                  <SelectItem key={key} value={key} className="hover:bg-accent/50 transition-colors duration-200">
+                  <SelectItem key={key} value={key} className="hover:bg-gray-700 transition-colors">
                     <div className="flex items-center space-x-3 w-full">
                       <span className="text-lg">{config.icon}</span>
                       <div className="flex-1">
                         <span className="font-medium">{config.name}</span>
                         <div className="flex items-center space-x-2 mt-1">
-                          <Badge variant="outline" className="text-xs bg-muted/50">
+                          <Badge variant="outline" className="text-xs bg-gray-800">
                             .{config.extension}
                           </Badge>
                           {config.executable && (
-                            <Badge variant="default" className="text-xs bg-success/20 text-success border-success/30">
+                            <Badge variant="default" className="text-xs bg-green-900/30 text-green-300 border-green-600">
                               Executable
                             </Badge>
                           )}
@@ -239,14 +595,14 @@ export default function NewFileModal({
               </SelectContent>
             </Select>
             {newFileLanguage && (
-              <div className="p-3 bg-info/5 border border-info/20 rounded-lg backdrop-blur-sm">
+              <div className="p-3 bg-blue-900/30 border border-blue-700 rounded-lg">
                 <div className="flex items-start space-x-2">
-                  <Code2 className="h-4 w-4 text-info mt-0.5 flex-shrink-0" />
+                  <Code2 className="h-4 w-4 text-blue-400 mt-0.5 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-info">
+                    <p className="text-sm font-medium text-blue-300">
                       {getSelectedLanguageConfig().name} Selected
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-gray-400">
                       Files will be created with .{getSelectedLanguageConfig().extension} extension
                       {getSelectedLanguageConfig().executable && " and can be executed"}
                     </p>
@@ -258,14 +614,14 @@ export default function NewFileModal({
 
           {/* File Preview */}
           {newFileName && newFileLanguage && (
-            <div className="p-4 bg-muted/20 rounded-lg backdrop-blur-sm border border-border/30">
+            <div className="p-4 bg-gray-800 rounded-lg border border-gray-700">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-primary/10 rounded-lg">
+                <div className="p-2 bg-blue-900/30 rounded-lg">
                   <span className="text-lg">{getSelectedLanguageConfig().icon}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">Preview:</p>
-                  <p className="text-lg font-mono text-primary truncate">
+                  <p className="text-sm font-medium text-white">Preview:</p>
+                  <p className="text-lg font-mono text-blue-400 truncate">
                     {newFileName.includes('.') ? newFileName : `${newFileName}.${getSelectedLanguageConfig().extension}`}
                   </p>
                 </div>
@@ -275,19 +631,19 @@ export default function NewFileModal({
         </CardContent>
         
         {/* Action Buttons */}
-        <div className="flex justify-end space-x-3 p-6 border-t border-border/30 bg-card/30 backdrop-blur-sm rounded-b-xl">
+        <div className="flex justify-end space-x-3 p-6 border-t border-gray-700 bg-gray-800/50 rounded-b-lg">
           <Button 
             variant="outline" 
             onClick={closeModal}
             disabled={fileCreationLoading}
-            className="glass-card backdrop-blur-sm hover:bg-card/50 transition-all duration-200"
+            className="hover:bg-gray-700 transition-colors"
           >
             Cancel
           </Button>
           <Button 
             onClick={validateAndCreate}
             disabled={!isFormValid}
-            className="bg-gradient-to-r from-primary via-accent-purple to-accent-blue hover:from-primary/90 hover:via-accent-purple/90 hover:to-accent-blue/90 text-white shadow-lg hover:shadow-xl transition-all duration-300 group min-w-[120px]"
+            className="min-w-[120px] transition-colors"
           >
             {fileCreationLoading ? (
               <>
@@ -296,21 +652,12 @@ export default function NewFileModal({
               </>
             ) : (
               <>
-                <Plus className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-300" />
+                <Plus className="h-4 w-4 mr-2" />
                 Create File
               </>
             )}
           </Button>
         </div>
-
-        {/* Existing Files Count */}
-        {files.length > 0 && (
-          <div className="absolute top-2 right-12">
-            <Badge variant="secondary" className="bg-muted/50 text-xs">
-              {files.length} existing files
-            </Badge>
-          </div>
-        )}
       </Card>
     </div>
   );

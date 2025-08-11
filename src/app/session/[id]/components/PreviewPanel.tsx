@@ -96,7 +96,7 @@ export default function PreviewPanel({
   
   return (
     <div className={cn(
-      "bg-card flex flex-col border-border/30 glass-card backdrop-blur-sm",
+      "bg-gray-800 flex flex-col border-gray-700",
       isFullscreen 
         ? "fixed inset-0 z-50" 
         : isMobile 
@@ -105,18 +105,18 @@ export default function PreviewPanel({
       "min-h-0" // Prevent flex item from growing beyond container
     )}>
       {/* Header */}
-      <div className="bg-card/50 backdrop-blur-sm px-4 py-3 border-b border-border/30 flex justify-between items-center flex-shrink-0">
+      <div className="bg-gray-800 px-4 py-3 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
         <div className="flex items-center space-x-3 min-w-0 flex-1">
-          <div className="p-1.5 bg-info/10 rounded-lg">
-            <Globe className="h-4 w-4 text-info" />
+          <div className="p-1.5 bg-blue-900/30 rounded-lg">
+            <Globe className="h-4 w-4 text-blue-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-foreground flex items-center space-x-2">
+            <h3 className="font-semibold text-white flex items-center space-x-2">
               <span>Live Preview</span>
-              {isRefreshing && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+              {isRefreshing && <Loader2 className="h-3 w-3 animate-spin text-gray-400" />}
             </h3>
             {activeFile && (
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="text-xs text-gray-400 truncate">
                 {activeFile.name}
               </p>
             )}
@@ -125,12 +125,12 @@ export default function PreviewPanel({
           {/* Status Badges */}
           <div className="flex items-center space-x-2">
             {canPreview ? (
-              <Badge variant="default" className="bg-success/20 text-success border-success/30 text-xs">
+              <Badge variant="default" className="bg-green-900/30 text-green-300 border-green-600 text-xs">
                 <Eye className="h-3 w-3 mr-1" />
                 Live
               </Badge>
             ) : (
-              <Badge variant="secondary" className="bg-warning/20 text-warning border-warning/30 text-xs">
+              <Badge variant="secondary" className="bg-yellow-900/30 text-yellow-300 border-yellow-600 text-xs">
                 <Code2 className="h-3 w-3 mr-1" />
                 No Preview
               </Badge>
@@ -146,11 +146,11 @@ export default function PreviewPanel({
             variant="ghost" 
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="hover:bg-info/10 hover:text-info transition-all duration-200 group"
+            className="hover:bg-blue-900/30 hover:text-blue-300 transition-colors"
             title="Refresh preview"
           >
             <RefreshCw className={cn(
-              "h-4 w-4 group-hover:rotate-180 transition-transform duration-300",
+              "h-4 w-4 transition-transform",
               isRefreshing && "animate-spin"
             )} />
           </Button>
@@ -161,13 +161,13 @@ export default function PreviewPanel({
               size="sm" 
               variant="ghost" 
               onClick={toggleFullscreen}
-              className="hover:bg-accent/50 transition-all duration-200 group"
+              className="hover:bg-gray-700 transition-colors"
               title={isFullscreen ? "Exit fullscreen" : "Fullscreen"}
             >
               {isFullscreen ? (
-                <Minimize2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                <Minimize2 className="h-4 w-4" />
               ) : (
-                <Maximize2 className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+                <Maximize2 className="h-4 w-4" />
               )}
             </Button>
           )}
@@ -177,10 +177,10 @@ export default function PreviewPanel({
             size="sm" 
             variant="ghost" 
             onClick={() => setIsPreviewVisible(false)}
-            className="hover:bg-destructive/10 hover:text-destructive transition-all duration-200 group"
+            className="hover:bg-red-900/30 hover:text-red-300 transition-colors"
             title="Close preview"
           >
-            <EyeOff className="h-4 w-4 group-hover:scale-110 transition-transform duration-200" />
+            <EyeOff className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -188,11 +188,11 @@ export default function PreviewPanel({
       {/* Content Area */}
       <div className="flex-1 relative min-h-0">
         {previewError ? (
-          <div className="flex items-center justify-center h-full bg-destructive/5">
+          <div className="flex items-center justify-center h-full bg-red-900/20">
             <div className="text-center p-6 max-w-md">
-              <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-destructive mb-2">Preview Error</h3>
-              <p className="text-sm text-muted-foreground mb-4">{previewError}</p>
+              <AlertTriangle className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-red-300 mb-2">Preview Error</h3>
+              <p className="text-sm text-gray-400 mb-4">{previewError}</p>
               <Button onClick={handleRefresh} variant="outline" size="sm">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Try Again
@@ -200,11 +200,11 @@ export default function PreviewPanel({
             </div>
           </div>
         ) : !canPreview ? (
-          <div className="flex items-center justify-center h-full bg-muted/5">
+          <div className="flex items-center justify-center h-full bg-gray-900">
             <div className="text-center p-6 max-w-md">
-              <Code2 className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No Preview Available</h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <Code2 className="h-12 w-12 text-gray-500 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-semibold text-white mb-2">No Preview Available</h3>
+              <p className="text-sm text-gray-400 mb-4">
                 Preview is only available for HTML, CSS, and JavaScript files. 
                 {activeFile && ` Current file: ${activeFile.language}`}
               </p>
@@ -219,10 +219,10 @@ export default function PreviewPanel({
           <>
             {/* Loading Overlay */}
             {isRefreshing && (
-              <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
+              <div className="absolute inset-0 bg-gray-800/80 flex items-center justify-center z-10">
                 <div className="text-center">
-                  <RefreshCw className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">Refreshing preview...</p>
+                  <RefreshCw className="h-8 w-8 animate-spin text-blue-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-400">Refreshing preview...</p>
                 </div>
               </div>
             )}
@@ -242,9 +242,9 @@ export default function PreviewPanel({
 
       {/* Footer Info */}
       {canPreview && !previewError && (
-        <div className="px-4 py-2 border-t border-border/30 bg-card/30 backdrop-blur-sm flex items-center justify-between text-xs text-muted-foreground">
+        <div className="px-4 py-2 border-t border-gray-700 bg-gray-800/50 flex items-center justify-between text-xs text-gray-400">
           <div className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
+            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             <span>Live updates enabled</span>
           </div>
           {session?.participants && (
@@ -256,9 +256,9 @@ export default function PreviewPanel({
       {/* Mobile Fullscreen Overlay */}
       {isMobile && isFullscreen && (
         <div className="absolute top-4 left-4 right-4 z-10">
-          <Alert className="glass-card backdrop-blur-sm border-info/30">
-            <Globe className="h-4 w-4 text-info" />
-            <AlertDescription className="text-info">
+          <Alert className="border-blue-600">
+            <Globe className="h-4 w-4 text-blue-400" />
+            <AlertDescription className="text-blue-300">
               Preview is now in fullscreen mode. Tap anywhere outside to exit.
             </AlertDescription>
           </Alert>

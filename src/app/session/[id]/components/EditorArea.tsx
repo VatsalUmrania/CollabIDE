@@ -1,9 +1,10 @@
 // import { Editor } from '@monaco-editor/react';
-// import { Terminal, File, Plus, Loader2, X, RefreshCw, AlertCircle, CheckCircle, Lock } from 'lucide-react';
+// import { Terminal, File, Plus, Loader2, X, RefreshCw, AlertCircle, CheckCircle, Lock, Maximize2, Minimize2 } from 'lucide-react';
 // import { Button } from '@/components/ui/button';
 // import { Badge } from '@/components/ui/badge';
 // import { languageConfigs } from '../utils/languageConfigs';
-// import { useCallback, useEffect, useRef } from 'react';
+// import { useCallback, useEffect, useRef, useState } from 'react';
+// import { cn } from '@/lib/utils';
 
 // interface CursorData {
 //   userId: string;
@@ -81,12 +82,27 @@
 //   const editorRef = useRef<any>(null);
 //   const monacoRef = useRef<any>(null);
 //   const decorationsRef = useRef<{ [key: string]: string[] }>({});
+  
+//   // Responsive state
+//   const [isOutputFullscreen, setIsOutputFullscreen] = useState(false);
+//   const [isMobileView, setIsMobileView] = useState(false);
 
 //   // Check if current file is locked by another user
 //   const currentLock = activeFile ? fileLocks[activeFile.id] : null;
 //   const isLockedByOther = currentLock && currentLock.lockedBy !== user?.id;
 //   const isRequestingLock = activeFile ? lockRequests[activeFile.id] : false;
 //   const canEdit = !isLockedByOther && !isRequestingLock;
+
+//   // Check screen size for responsive behavior
+//   useEffect(() => {
+//     const checkScreenSize = () => {
+//       setIsMobileView(window.innerWidth < 768);
+//     };
+
+//     checkScreenSize();
+//     window.addEventListener('resize', checkScreenSize);
+//     return () => window.removeEventListener('resize', checkScreenSize);
+//   }, []);
 
 //   // Enhanced editor mount handler with cursor tracking
 //   const handleEditorDidMountWithCursors = useCallback((editor: any, monaco: any) => {
@@ -409,19 +425,48 @@
 //     }
 //   }, [socket, activeFile, currentLock, isRequestingLock]);
 
+//   // Responsive layout classes
+//   const getResponsiveLayout = () => {
+//     if (isMobileView) {
+//       return showOutput 
+//         ? isOutputFullscreen 
+//           ? "flex flex-col h-full" // Output fullscreen on mobile
+//           : "flex flex-col h-full" // Stacked layout on mobile
+//         : "flex flex-col h-full"; // Just editor on mobile
+//     }
+//     return "flex h-full"; // Side-by-side on desktop
+//   };
+
+//   const getEditorClasses = () => {
+//     if (isMobileView && showOutput) {
+//       return isOutputFullscreen ? "hidden" : "flex-1 min-h-0";
+//     }
+//     return "flex-1 min-h-0";
+//   };
+
+//   const getOutputClasses = () => {
+//     if (isMobileView) {
+//       return isOutputFullscreen ? "flex-1" : "h-1/2 min-h-[200px]";
+//     }
+//     return "w-2/5 min-w-[300px] max-w-[50%]";
+//   };
+
 //   return (
-//     <div className="flex-1 flex">
+//     <div className={cn("relative", getResponsiveLayout())}>
 //       {/* Code Editor */}
-//       <div className="flex-1 relative">
+//       <div className={cn("relative bg-gray-900", getEditorClasses())}>
 //         {activeFile ? (
 //           <>
-//             {/* Lock Status Indicators */}
+//             {/* Lock Status Indicators - Responsive positioning */}
 //             {isLockedByOther && (
-//               <div className="absolute top-4 right-4 bg-yellow-50 border border-yellow-200 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 z-20 shadow-sm">
-//                 <Lock className="h-4 w-4 text-yellow-600" />
-//                 <div>
+//               <div className={cn(
+//                 "absolute z-20 bg-yellow-50 border border-yellow-200 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-sm",
+//                 isMobileView ? "top-2 left-2 right-2" : "top-4 right-4"
+//               )}>
+//                 <Lock className="h-4 w-4 text-yellow-600 flex-shrink-0" />
+//                 <div className="min-w-0">
 //                   <div className="font-medium text-yellow-800">File Locked</div>
-//                   <div className="text-yellow-600 text-xs">
+//                   <div className="text-yellow-600 text-xs truncate">
 //                     {currentLock?.lockedByUser?.displayName} is editing this file
 //                   </div>
 //                 </div>
@@ -429,20 +474,28 @@
 //             )}
             
 //             {isRequestingLock && (
-//               <div className="absolute top-4 right-4 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 z-20 shadow-sm">
-//                 <Loader2 className="h-4 w-4 text-blue-600 animate-spin" />
-//                 <div>
+//               <div className={cn(
+//                 "absolute z-20 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-sm",
+//                 isMobileView ? "top-2 left-2 right-2" : "top-4 right-4"
+//               )}>
+//                 <Loader2 className="h-4 w-4 text-blue-600 animate-spin flex-shrink-0" />
+//                 <div className="min-w-0">
 //                   <div className="font-medium text-blue-800">Requesting Access</div>
 //                   <div className="text-blue-600 text-xs">Waiting for edit permission...</div>
 //                 </div>
 //               </div>
 //             )}
 
-//             {/* Edit Access Button */}
+//             {/* Edit Access Button - Responsive positioning */}
 //             {isLockedByOther && (
-//               <div className="absolute top-20 right-4 z-20">
+//               <div className={cn(
+//                 "absolute z-20",
+//                 isMobileView 
+//                   ? "bottom-4 left-1/2 transform -translate-x-1/2" 
+//                   : "top-20 right-4"
+//               )}>
 //                 <Button
-//                   size="sm"
+//                   size={isMobileView ? "default" : "sm"}
 //                   variant="outline"
 //                   onClick={requestFileLock}
 //                   disabled={isRequestingLock}
@@ -451,12 +504,12 @@
 //                   {isRequestingLock ? (
 //                     <>
 //                       <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-//                       Requesting...
+//                       {isMobileView ? "Requesting..." : "Requesting..."}
 //                     </>
 //                   ) : (
 //                     <>
 //                       <Lock className="h-3 w-3 mr-1" />
-//                       Request Edit Access
+//                       {isMobileView ? "Request Access" : "Request Edit Access"}
 //                     </>
 //                   )}
 //                 </Button>
@@ -472,8 +525,8 @@
 //               onMount={handleEditorDidMountWithCursors}
 //               theme="vs-dark"
 //               options={{
-//                 minimap: { enabled: false },
-//                 fontSize: 14,
+//                 minimap: { enabled: !isMobileView }, // Disable minimap on mobile
+//                 fontSize: isMobileView ? 12 : 14, // Smaller font on mobile
 //                 wordWrap: 'on',
 //                 automaticLayout: true,
 //                 scrollBeyondLastLine: false,
@@ -482,7 +535,7 @@
 //                 cursorBlinking: 'smooth',
 //                 cursorSmoothCaretAnimation: 'on',
 //                 smoothScrolling: true,
-//                 readOnly: !canEdit, // Make read-only when locked by others
+//                 readOnly: !canEdit,
 //                 // Enhanced options for better cursor visibility
 //                 renderLineHighlight: 'line',
 //                 selectOnLineNumbers: true,
@@ -492,16 +545,19 @@
 //                 mouseWheelScrollSensitivity: 1,
 //                 fastScrollSensitivity: 5,
 //                 scrollBeyondLastColumn: 5,
-//                 glyphMargin: true,
-//                 folding: true,
+//                 glyphMargin: !isMobileView, // Less margin on mobile
+//                 folding: !isMobileView, // Disable folding on mobile for space
 //                 foldingStrategy: 'indentation',
 //                 showFoldingControls: 'mouseover',
 //                 disableLayerHinting: true,
 //                 fontLigatures: true,
 //                 renderWhitespace: 'boundary',
 //                 renderControlCharacters: false,
-//                 renderIndentGuides: true,
-//                 highlightActiveIndentGuide: true,
+//                 renderIndentGuides: !isMobileView,
+//                 highlightActiveIndentGuide: !isMobileView,
+//                 lineNumbers: isMobileView ? 'off' : 'on', // Hide line numbers on mobile
+//                 lineDecorationsWidth: isMobileView ? 0 : 10,
+//                 lineNumbersMinChars: isMobileView ? 0 : 3,
 //                 // Show a different cursor style when read-only
 //                 ...(isLockedByOther && {
 //                   rulers: [],
@@ -510,12 +566,15 @@
 //               }}
 //             />
 
-//             {/* Read-only overlay message */}
+//             {/* Read-only overlay message - Responsive */}
 //             {!canEdit && (
 //               <div className="absolute inset-0 bg-black bg-opacity-10 pointer-events-none flex items-center justify-center z-10">
-//                 <div className="bg-white rounded-lg shadow-lg p-6 text-center max-w-md mx-4">
-//                   <Lock className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-//                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
+//                 <div className={cn(
+//                   "bg-white rounded-lg shadow-lg p-6 text-center max-w-md",
+//                   isMobileView ? "mx-4 text-sm" : "mx-4"
+//                 )}>
+//                   <Lock className={cn("mx-auto mb-4 text-gray-400", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
+//                   <h3 className={cn("font-semibold text-gray-900 mb-2", isMobileView ? "text-base" : "text-lg")}>
 //                     {isRequestingLock ? 'Requesting Edit Access' : 'File is Locked'}
 //                   </h3>
 //                   <p className="text-gray-600 text-sm">
@@ -529,17 +588,19 @@
 //             )}
 //           </>
 //         ) : (
-//           <div className="flex items-center justify-center h-full bg-gray-900 text-white">
-//             <div className="text-center">
-//               <File className="h-12 w-12 mx-auto mb-4 opacity-50" />
-//               <h3 className="text-lg font-medium mb-2">No file selected</h3>
-//               <p className="text-gray-400 mb-4">
+//           <div className="flex items-center justify-center h-full bg-gray-900 text-white p-4">
+//             <div className="text-center max-w-md">
+//               <File className={cn("mx-auto mb-4 opacity-50", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
+//               <h3 className={cn("font-medium mb-2", isMobileView ? "text-base" : "text-lg")}>No file selected</h3>
+//               <p className={cn("text-gray-400 mb-4", isMobileView ? "text-sm" : "text-base")}>
 //                 {isHost ? 'Create your first file to start coding' : 'Select a file to start editing'}
 //               </p>
 //               {isHost && (
 //                 <Button 
 //                   onClick={showNewFileModal}
 //                   disabled={fileCreationLoading}
+//                   size={isMobileView ? "default" : "default"}
+//                   className="w-full sm:w-auto"
 //                 >
 //                   {fileCreationLoading ? (
 //                     <>
@@ -559,62 +620,87 @@
 //         )}
 //       </div>
 
-//       {/* Output Panel */}
+//       {/* Output Panel - Responsive */}
 //       {showOutput && (
-//         <div className="w-2/5 border-l bg-white flex flex-col">
-//           <div className="bg-gray-900 text-white px-4 py-3 border-b flex justify-between items-center">
-//             <div className="flex items-center space-x-2">
-//               <Terminal className="h-4 w-4" />
+//         <div className={cn(
+//           "bg-white flex flex-col border-gray-200",
+//           getOutputClasses(),
+//           isMobileView ? "border-t" : "border-l"
+//         )}>
+//           <div className="bg-gray-900 text-white px-4 py-3 border-b flex justify-between items-center flex-shrink-0">
+//             <div className="flex items-center space-x-2 min-w-0 flex-1">
+//               <Terminal className="h-4 w-4 flex-shrink-0" />
 //               <h3 className="font-medium">Output</h3>
 //               {activeFile && (
-//                 <Badge className="bg-gray-700 text-gray-200 text-xs">
+//                 <Badge className="bg-gray-700 text-gray-200 text-xs hidden sm:inline-flex">
 //                   {languageConfigs[activeFile.language as keyof typeof languageConfigs]?.name || activeFile.language}
 //                 </Badge>
 //               )}
 //             </div>
-//             <Button 
-//               size="sm" 
-//               variant="ghost" 
-//               onClick={() => setShowOutput(false)}
-//               className="text-gray-400 hover:text-white hover:bg-gray-800"
-//             >
-//               <X className="h-4 w-4" />
-//             </Button>
+//             <div className="flex items-center space-x-2">
+//               {/* Mobile fullscreen toggle */}
+//               {isMobileView && (
+//                 <Button 
+//                   size="sm" 
+//                   variant="ghost" 
+//                   onClick={() => setIsOutputFullscreen(!isOutputFullscreen)}
+//                   className="text-gray-400 hover:text-white hover:bg-gray-800"
+//                   title={isOutputFullscreen ? "Exit fullscreen" : "Fullscreen"}
+//                 >
+//                   {isOutputFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+//                 </Button>
+//               )}
+//               <Button 
+//                 size="sm" 
+//                 variant="ghost" 
+//                 onClick={() => setShowOutput(false)}
+//                 className="text-gray-400 hover:text-white hover:bg-gray-800"
+//               >
+//                 <X className="h-4 w-4" />
+//               </Button>
+//             </div>
 //           </div>
           
-//           <div className="flex-1 overflow-hidden flex flex-col">
+//           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
 //             {isExecuting ? (
 //               <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
-//                 <div className="text-center">
-//                   <RefreshCw className="h-12 w-12 mx-auto mb-4 animate-spin text-blue-600" />
+//                 <div className="text-center p-4">
+//                   <RefreshCw className={cn("mx-auto mb-4 animate-spin text-blue-600", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
 //                   <p className="text-blue-700 font-medium">Executing code...</p>
 //                 </div>
 //               </div>
 //             ) : executionResult ? (
-//               <div className="flex-1 flex flex-col">
-//                 <div className={`px-4 py-3 text-sm border-b ${
+//               <div className="flex-1 flex flex-col min-h-0">
+//                 <div className={cn(
+//                   "px-4 py-3 text-sm border-b flex-shrink-0",
 //                   executionResult.error ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
-//                 }`}>
+//                 )}>
 //                   {executionResult.error ? (
 //                     <div className="flex items-center">
-//                       <AlertCircle className="h-4 w-4 mr-2" />
-//                       Execution failed
+//                       <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+//                       <span className="truncate">Execution failed</span>
 //                     </div>
 //                   ) : (
 //                     <div className="flex items-center">
-//                       <CheckCircle className="h-4 w-4 mr-2" />
-//                       Executed successfully in {executionResult.executionTime}ms
+//                       <CheckCircle className="h-4 w-4 mr-2 flex-shrink-0" />
+//                       <span className="truncate">Executed successfully in {executionResult.executionTime}ms</span>
 //                     </div>
 //                   )}
 //                 </div>
                 
-//                 <div className="flex-1 overflow-auto p-4">
+//                 <div className="flex-1 overflow-auto p-4 min-h-0">
 //                   {executionResult.error ? (
-//                     <pre className="text-sm text-red-600 whitespace-pre-wrap font-mono bg-red-50 p-3 rounded border">
+//                     <pre className={cn(
+//                       "text-red-600 whitespace-pre-wrap font-mono bg-red-50 p-3 rounded border",
+//                       isMobileView ? "text-xs" : "text-sm"
+//                     )}>
 //                       {executionResult.error}
 //                     </pre>
 //                   ) : (
-//                     <pre className="text-sm text-gray-800 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded border min-h-32">
+//                     <pre className={cn(
+//                       "text-gray-800 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded border min-h-32",
+//                       isMobileView ? "text-xs" : "text-sm"
+//                     )}>
 //                       {executionResult.output || 'No output generated'}
 //                     </pre>
 //                   )}
@@ -622,9 +708,9 @@
 //               </div>
 //             ) : (
 //               <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
-//                 <div className="text-center">
-//                   <Terminal className="h-12 w-12 mx-auto mb-3 opacity-50" />
-//                   <p>Click "Run Code" to execute</p>
+//                 <div className="text-center p-4">
+//                   <Terminal className={cn("mx-auto mb-3 opacity-50", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
+//                   <p className={isMobileView ? "text-sm" : "text-base"}>Click "Run Code" to execute</p>
 //                 </div>
 //               </div>
 //             )}
@@ -950,36 +1036,33 @@ export default function EditorArea({
         background: ${color};
         z-index: 1000;
         animation: cursor-blink-${userId} 1s ease-in-out infinite;
-        box-shadow: 0 0 4px ${color}80;
         border-radius: 1px;
       }
       
       .cursor-label-${userId}::after {
         content: '${userName.replace(/'/g, "\\'")}';
         position: absolute;
-        top: -32px;
+        top: -28px;
         left: -1px;
         background: ${color};
         color: white;
         padding: 4px 8px;
         border-radius: 4px;
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         white-space: nowrap;
         z-index: 1001;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         line-height: 1.2;
         pointer-events: none;
-        border: 1px solid ${color};
-        max-width: 150px;
+        max-width: 120px;
         overflow: hidden;
         text-overflow: ellipsis;
       }
       
       @keyframes cursor-blink-${userId} {
         0%, 50% { opacity: 1; }
-        51%, 100% { opacity: 0.3; }
+        51%, 100% { opacity: 0.4; }
       }
       
       .cursor-${userId} {
@@ -1001,10 +1084,9 @@ export default function EditorArea({
     style.id = `selection-style-${userId}`;
     style.textContent = `
       .selection-${userId} {
-        background: linear-gradient(90deg, ${color}25, ${color}35) !important;
+        background: ${color}30 !important;
         border: 1px solid ${color}60;
-        border-radius: 3px;
-        box-shadow: inset 0 1px 2px ${color}20;
+        border-radius: 2px;
       }
     `;
     
@@ -1097,13 +1179,13 @@ export default function EditorArea({
             {/* Lock Status Indicators - Responsive positioning */}
             {isLockedByOther && (
               <div className={cn(
-                "absolute z-20 bg-yellow-50 border border-yellow-200 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-sm",
+                "absolute z-20 bg-yellow-100 border border-yellow-300 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-sm",
                 isMobileView ? "top-2 left-2 right-2" : "top-4 right-4"
               )}>
                 <Lock className="h-4 w-4 text-yellow-600 flex-shrink-0" />
                 <div className="min-w-0">
                   <div className="font-medium text-yellow-800">File Locked</div>
-                  <div className="text-yellow-600 text-xs truncate">
+                  <div className="text-yellow-700 text-xs truncate">
                     {currentLock?.lockedByUser?.displayName} is editing this file
                   </div>
                 </div>
@@ -1112,13 +1194,13 @@ export default function EditorArea({
             
             {isRequestingLock && (
               <div className={cn(
-                "absolute z-20 bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-sm",
+                "absolute z-20 bg-blue-100 border border-blue-300 px-3 py-2 rounded-lg text-sm flex items-center space-x-2 shadow-sm",
                 isMobileView ? "top-2 left-2 right-2" : "top-4 right-4"
               )}>
                 <Loader2 className="h-4 w-4 text-blue-600 animate-spin flex-shrink-0" />
                 <div className="min-w-0">
                   <div className="font-medium text-blue-800">Requesting Access</div>
-                  <div className="text-blue-600 text-xs">Waiting for edit permission...</div>
+                  <div className="text-blue-700 text-xs">Waiting for edit permission...</div>
                 </div>
               </div>
             )}
@@ -1260,16 +1342,16 @@ export default function EditorArea({
       {/* Output Panel - Responsive */}
       {showOutput && (
         <div className={cn(
-          "bg-white flex flex-col border-gray-200",
+          "bg-white flex flex-col border-gray-700",
           getOutputClasses(),
           isMobileView ? "border-t" : "border-l"
         )}>
-          <div className="bg-gray-900 text-white px-4 py-3 border-b flex justify-between items-center flex-shrink-0">
+          <div className="bg-gray-800 text-white px-4 py-3 border-b border-gray-700 flex justify-between items-center flex-shrink-0">
             <div className="flex items-center space-x-2 min-w-0 flex-1">
               <Terminal className="h-4 w-4 flex-shrink-0" />
               <h3 className="font-medium">Output</h3>
               {activeFile && (
-                <Badge className="bg-gray-700 text-gray-200 text-xs hidden sm:inline-flex">
+                <Badge className="bg-gray-700 text-gray-300 text-xs hidden sm:inline-flex">
                   {languageConfigs[activeFile.language as keyof typeof languageConfigs]?.name || activeFile.language}
                 </Badge>
               )}
@@ -1281,7 +1363,7 @@ export default function EditorArea({
                   size="sm" 
                   variant="ghost" 
                   onClick={() => setIsOutputFullscreen(!isOutputFullscreen)}
-                  className="text-gray-400 hover:text-white hover:bg-gray-800"
+                  className="text-gray-400 hover:text-white hover:bg-gray-700"
                   title={isOutputFullscreen ? "Exit fullscreen" : "Fullscreen"}
                 >
                   {isOutputFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
@@ -1291,7 +1373,7 @@ export default function EditorArea({
                 size="sm" 
                 variant="ghost" 
                 onClick={() => setShowOutput(false)}
-                className="text-gray-400 hover:text-white hover:bg-gray-800"
+                className="text-gray-400 hover:text-white hover:bg-gray-700"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -1300,17 +1382,17 @@ export default function EditorArea({
           
           <div className="flex-1 overflow-hidden flex flex-col min-h-0">
             {isExecuting ? (
-              <div className="flex-1 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50">
+              <div className="flex-1 flex items-center justify-center bg-gray-100">
                 <div className="text-center p-4">
-                  <RefreshCw className={cn("mx-auto mb-4 animate-spin text-blue-600", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
-                  <p className="text-blue-700 font-medium">Executing code...</p>
+                  <RefreshCw className={cn("mx-auto mb-4 animate-spin text-blue-500", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
+                  <p className="text-blue-600 font-medium">Executing code...</p>
                 </div>
               </div>
             ) : executionResult ? (
               <div className="flex-1 flex flex-col min-h-0">
                 <div className={cn(
                   "px-4 py-3 text-sm border-b flex-shrink-0",
-                  executionResult.error ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                  executionResult.error ? 'bg-red-100 text-red-800 border-red-200' : 'bg-green-100 text-green-800 border-green-200'
                 )}>
                   {executionResult.error ? (
                     <div className="flex items-center">
@@ -1328,14 +1410,14 @@ export default function EditorArea({
                 <div className="flex-1 overflow-auto p-4 min-h-0">
                   {executionResult.error ? (
                     <pre className={cn(
-                      "text-red-600 whitespace-pre-wrap font-mono bg-red-50 p-3 rounded border",
+                      "text-red-700 whitespace-pre-wrap font-mono bg-red-50 p-3 rounded border border-red-200",
                       isMobileView ? "text-xs" : "text-sm"
                     )}>
                       {executionResult.error}
                     </pre>
                   ) : (
                     <pre className={cn(
-                      "text-gray-800 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded border min-h-32",
+                      "text-gray-800 whitespace-pre-wrap font-mono bg-gray-50 p-3 rounded border border-gray-200 min-h-32",
                       isMobileView ? "text-xs" : "text-sm"
                     )}>
                       {executionResult.output || 'No output generated'}

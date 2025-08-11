@@ -298,21 +298,21 @@ app.prepare().then(() => {
     })
 
     // Real-time cursor updates
-    socket.on('cursor-update', (cursorData) => {
-      try {
-        if (!socket.sessionId || socket.sessionId !== cursorData.sessionId) {
-          return
-        }
+    // Server-side socket handler (add to your socket server)
+    socket.on('cursor-position', (data) => {
+      console.log(`📍 Server: Broadcasting cursor from ${data.userName} in session ${data.sessionId}`);
+      
+      // Broadcast to all OTHER users in the same session
+      socket.to(data.sessionId).emit('cursor-position', {
+        userId: data.userId,
+        userName: data.userName,
+        fileId: data.fileId,
+        position: data.position,
+        selection: data.selection,
+        timestamp: data.timestamp
+      });
+    });
 
-        socket.to(`session-${cursorData.sessionId}`).emit('cursor-update', {
-          ...cursorData,
-          timestamp: Date.now()
-        })
-
-      } catch (error) {
-        console.error('Cursor update error:', error)
-      }
-    })
 
     // File creation
     socket.on('file-created', (data: { sessionId: string, file: any }) => {
@@ -674,7 +674,32 @@ app.prepare().then(() => {
       console.error('Session activity update error:', error)
     }
   }
-
+  editor.onDidChangeCursorPosition((e: any) => {
+    const position = e.position;
+    const selection = editor.getSelection();
+    
+    const cursorData = {
+      sessionId,
+      fileId: activeFileId,
+      userId: user.id,
+      userName: user.displayName || user.name || 'Anonymous',
+      position: {
+        lineNumber: position.lineNumber,
+        column: position.column
+      },
+      selection: selection ? {
+        startLineNumber: selection.startLineNumber,
+        startColumn: selection.startColumn,
+        endLineNumber: selection.endLineNumber,
+        endColumn: selection.endColumn
+      } : null,
+      timestamp: Date.now()
+    };
+    
+    console.log('📤 EMITTING cursor position:', cursorData.userName, 'at line', position.lineNumber, 'col', position.column);
+    socket.emit('cursor-position', cursorData);
+  });
+  
   // Enhanced cleanup with comprehensive session management
   setInterval(async () => {
     try {
@@ -804,13 +829,5 @@ app.prepare().then(() => {
 
   httpServer.listen(port, () => {
     console.log(`🚀 Server ready on http://${hostname}:${port}`)
-    console.log(`📡 Socket.IO server with enhanced session management`)
-    console.log(`🎯 Features enabled:`)
-    console.log(`   • Real-time file collaboration`)
-    console.log(`   • Session ending with participant removal`)
-    console.log(`   • Enhanced participant management`)
-    console.log(`   • Automatic cleanup and memory management`)
-    console.log(`   • Force disconnect capabilities`)
-    console.log(`   • Comprehensive error handling`)
   })
 })

@@ -4,26 +4,25 @@ import { X, AlertCircle, CheckCircle, AlertTriangle, Info } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const alertVariants = cva(
-  'relative w-full rounded-xl border p-4 shadow-sm transition-all duration-300 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground backdrop-blur-sm',
+  'relative w-full rounded-lg border p-4 transition-colors [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-foreground',
   {
     variants: {
       variant: {
         default: 
-          'bg-card/80 text-foreground border-border/50 backdrop-blur-sm',
+          'bg-gray-800 text-white border-gray-700',
         destructive:
-          'border-destructive/30 bg-destructive/10 text-destructive-foreground backdrop-blur-sm [&>svg]:text-destructive shadow-lg shadow-destructive/10',
+          'bg-red-900/20 text-red-200 border-red-800/50 [&>svg]:text-red-400',
         success:
-          'border-success/30 bg-success/10 text-success-foreground backdrop-blur-sm [&>svg]:text-success shadow-lg shadow-success/10',
+          'bg-green-900/20 text-green-200 border-green-800/50 [&>svg]:text-green-400',
         warning:
-          'border-warning/30 bg-warning/10 text-warning-foreground backdrop-blur-sm [&>svg]:text-warning shadow-lg shadow-warning/10',
+          'bg-yellow-900/20 text-yellow-200 border-yellow-800/50 [&>svg]:text-yellow-400',
         info:
-          'border-info/30 bg-info/10 text-info-foreground backdrop-blur-sm [&>svg]:text-info shadow-lg shadow-info/10',
+          'bg-blue-900/20 text-blue-200 border-blue-800/50 [&>svg]:text-blue-400',
       },
       size: {
-        default: 'p-4 text-base',
-        sm: 'p-3 text-sm',
-        lg: 'p-6 text-lg',
-        xl: 'p-8 text-xl',
+        default: 'p-4 text-sm',
+        sm: 'p-3 text-xs',
+        lg: 'p-5 text-base',
       },
     },
     defaultVariants: {
@@ -40,7 +39,6 @@ interface AlertProps
   onDismiss?: () => void
   icon?: React.ReactNode
   showDefaultIcon?: boolean
-  animate?: boolean
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
@@ -52,20 +50,14 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
     onDismiss, 
     icon,
     showDefaultIcon = true,
-    animate = true,
     children,
     ...props 
   }, ref) => {
     const [isVisible, setIsVisible] = React.useState(true)
-    const [isExiting, setIsExiting] = React.useState(false)
 
     const handleDismiss = () => {
-      setIsExiting(true)
-      // Delay the actual removal to allow exit animation
-      setTimeout(() => {
-        setIsVisible(false)
-        onDismiss?.()
-      }, 300)
+      setIsVisible(false)
+      onDismiss?.()
     }
 
     const getDefaultIcon = () => {
@@ -74,15 +66,15 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
 
       switch (variant) {
         case 'destructive':
-          return <AlertCircle className="h-5 w-5" />
+          return <AlertCircle className="h-4 w-4" />
         case 'success':
-          return <CheckCircle className="h-5 w-5" />
+          return <CheckCircle className="h-4 w-4" />
         case 'warning':
-          return <AlertTriangle className="h-5 w-5" />
+          return <AlertTriangle className="h-4 w-4" />
         case 'info':
-          return <Info className="h-5 w-5" />
+          return <Info className="h-4 w-4" />
         default:
-          return <Info className="h-5 w-5" />
+          return <Info className="h-4 w-4" />
       }
     }
 
@@ -94,8 +86,6 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         role="alert"
         className={cn(
           alertVariants({ variant, size }),
-          animate && 'animate-slide-down',
-          isExiting && 'animate-fade-out opacity-0 transform scale-95',
           className
         )}
         {...props}
@@ -107,7 +97,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
         {dismissible && (
           <button
             onClick={handleDismiss}
-            className="absolute top-3 right-3 rounded-lg p-1 opacity-70 ring-offset-background transition-all duration-200 hover:opacity-100 hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+            className="absolute top-3 right-3 rounded p-1 text-current opacity-70 hover:opacity-100 hover:bg-white/10 transition-all"
             aria-label="Dismiss alert"
           >
             <X className="h-4 w-4" />
@@ -126,7 +116,7 @@ const AlertTitle = React.forwardRef<
   <h5
     ref={ref}
     className={cn(
-      'mb-2 font-semibold leading-none tracking-tight text-lg',
+      'mb-2 font-semibold leading-none tracking-tight',
       className
     )}
     {...props}
@@ -141,7 +131,7 @@ const AlertDescription = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'text-sm leading-relaxed opacity-90 [&_p]:leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0',
+      'text-sm leading-relaxed [&_p]:leading-relaxed [&_p]:mb-2 [&_p:last-child]:mb-0',
       className
     )}
     {...props}
@@ -156,7 +146,7 @@ const AlertActions = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'flex items-center gap-3 mt-4 pt-3 border-t border-border/30',
+      'flex items-center gap-2 mt-3 pt-3 border-t border-current/20',
       className
     )}
     {...props}
@@ -164,7 +154,6 @@ const AlertActions = React.forwardRef<
 ))
 AlertActions.displayName = 'AlertActions'
 
-// Enhanced Alert variants for specific use cases
 const AlertContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -177,7 +166,7 @@ const AlertContent = React.forwardRef<
 ))
 AlertContent.displayName = 'AlertContent'
 
-// Success Alert with predefined styling
+// Predefined alert variants
 const SuccessAlert = React.forwardRef<
   HTMLDivElement,
   Omit<AlertProps, 'variant'>
@@ -188,7 +177,6 @@ const SuccessAlert = React.forwardRef<
 ))
 SuccessAlert.displayName = 'SuccessAlert'
 
-// Error Alert with predefined styling
 const ErrorAlert = React.forwardRef<
   HTMLDivElement,
   Omit<AlertProps, 'variant'>
@@ -199,7 +187,6 @@ const ErrorAlert = React.forwardRef<
 ))
 ErrorAlert.displayName = 'ErrorAlert'
 
-// Warning Alert with predefined styling
 const WarningAlert = React.forwardRef<
   HTMLDivElement,
   Omit<AlertProps, 'variant'>
@@ -210,7 +197,6 @@ const WarningAlert = React.forwardRef<
 ))
 WarningAlert.displayName = 'WarningAlert'
 
-// Info Alert with predefined styling
 const InfoAlert = React.forwardRef<
   HTMLDivElement,
   Omit<AlertProps, 'variant'>
