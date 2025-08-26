@@ -1,0 +1,131 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionType {
+  PUBLIC
+  PRIVATE
+}
+
+enum ParticipantRole {
+  HOST
+  COLLABORATOR
+}
+
+model User {
+  id                    String   @id @default(cuid())
+  email                 String   @unique
+  password              String
+  displayName           String
+  isVerified            Boolean  @default(false)
+  verificationToken     String?
+  resetToken            String?
+  resetTokenExpiry      DateTime?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  lastLogin             DateTime?
+  loginAttempts         Int      @default(0)
+  lockedUntil           DateTime?
+
+  // Relations
+  ownedSessions         Session[]
+  participations        SessionParticipant[]
+  messages              Message[]
+  sessionFiles          SessionFile[]
+  fileLocks            FileLock[]
+  @@map("users")
+}
+
+model Session {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  type        SessionType @default(PUBLIC)
+  isActive    Boolean     @default(true)
+  content     Json        @default("{}")
+  settings    Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  expiresAt   DateTime?
+  lastActivity DateTime   @default(now())
+
+  // Relations
+  ownerId      String
+  owner        User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  participants SessionParticipant[]
+  messages     Message[]
+  files        SessionFile[]
+
+  @@map("sessions")
+}
+
+model SessionParticipant {
+  id        String            @id @default(cuid())
+  role      ParticipantRole   @default(COLLABORATOR)
+  joinedAt  DateTime          @default(now())
+  isActive  Boolean           @default(true)
+
+  // Relations
+  userId    String
+  sessionId String
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session   Session           @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, sessionId])
+  @@map("session_participants")
+}
+
+model SessionFile {
+  id        String   @id @default(cuid())
+  name      String
+  language  String   @default("javascript")
+  content   String   @default("")
+  size      Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sessionId String
+  createdBy String
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  creator   User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+  lock      FileLock?
+  @@unique([sessionId, name])
+  @@map("session_files")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId    String
+  sessionId String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model FileLock {
+  id        String   @id @default(cuid())
+  fileId    String   @unique
+  lockedBy  String
+  lockedAt  DateTime @default(now())
+  expiresAt DateTime // Auto-expire locks after inactivity
+  
+  // Relations
+  file      SessionFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [lockedBy], references: [id], onDelete: Cascade)
+  
+  @@map("file_locks")
+}
