@@ -21,7 +21,6 @@ import {
   X,
   Wifi,
   Activity,
-  Dot,
   Settings,
   LogOut,
   Zap,
@@ -119,15 +118,15 @@ export default function SessionHeader({
     toast.success('Session exported successfully')
   }
 
-  // Get sync status configuration
+  // Get sync status configuration using CSS variables
   const getSyncStatus = () => {
     switch (syncStatus) {
       case 'synced':
         return { 
           icon: CheckCircle, 
           color: 'text-green-600 dark:text-green-400', 
-          bgColor: 'bg-green-100 dark:bg-green-950/20', 
-          borderColor: 'border-green-200 dark:border-green-900/20',
+          bgColor: 'bg-green-100/50 dark:bg-green-950/20', 
+          borderColor: 'border-green-200/50 dark:border-green-900/30',
           label: 'Synced',
           description: 'All changes saved'
         }
@@ -135,8 +134,8 @@ export default function SessionHeader({
         return { 
           icon: RefreshCw, 
           color: 'text-blue-600 dark:text-blue-400', 
-          bgColor: 'bg-blue-100 dark:bg-blue-950/20', 
-          borderColor: 'border-blue-200 dark:border-blue-900/20',
+          bgColor: 'bg-blue-100/50 dark:bg-blue-950/20', 
+          borderColor: 'border-blue-200/50 dark:border-blue-900/30',
           label: 'Syncing',
           description: 'Saving changes...',
           animate: true 
@@ -145,8 +144,8 @@ export default function SessionHeader({
         return { 
           icon: WifiOff, 
           color: 'text-orange-600 dark:text-orange-400', 
-          bgColor: 'bg-orange-100 dark:bg-orange-950/20', 
-          borderColor: 'border-orange-200 dark:border-orange-900/20',
+          bgColor: 'bg-orange-100/50 dark:bg-orange-950/20', 
+          borderColor: 'border-orange-200/50 dark:border-orange-900/30',
           label: 'Offline',
           description: 'Connection lost'
         }
@@ -154,8 +153,8 @@ export default function SessionHeader({
         return { 
           icon: AlertCircle, 
           color: 'text-red-600 dark:text-red-400', 
-          bgColor: 'bg-red-100 dark:bg-red-950/20', 
-          borderColor: 'border-red-200 dark:border-red-900/20',
+          bgColor: 'bg-red-100/50 dark:bg-red-950/20', 
+          borderColor: 'border-red-200/50 dark:border-red-900/30',
           label: 'Error',
           description: 'Sync failed'
         }
@@ -164,29 +163,29 @@ export default function SessionHeader({
 
   const syncStatusConfig = getSyncStatus()
 
-  // Mobile Layout with Enhanced Sheet
+  // Mobile Layout with VS Code theme
   if (isMobile) {
     return (
-      <Card className="border-0 bg-card/80 backdrop-blur shadow-lg">
-        <CardHeader className="pb-3">
+      <div className="border-b border-border bg-card/80 backdrop-blur">
+        <div className="p-3">
           <div className="flex items-center justify-between">
             {/* Mobile Left Section */}
             <div className="flex items-center space-x-3 min-w-0 flex-1">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-2">
-                  <CardTitle className="text-xl font-bold text-foreground truncate">
+                  <h1 className="text-lg font-semibold text-foreground truncate">
                     {session.title}
-                  </CardTitle>
+                  </h1>
                   
                   {/* Live Status Indicator */}
                   <div className={cn(
                     "w-2 h-2 rounded-full flex-shrink-0",
-                    session.isActive ? "bg-green-500 animate-pulse shadow-lg shadow-green-500/50" : "bg-gray-400"
+                    session.isActive ? "bg-green-500 animate-pulse" : "bg-muted-foreground"
                   )} />
                   
                   {/* Host Badge */}
                   {isHost && (
-                    <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border-orange-500/20 text-xs">
+                    <Badge variant="secondary" className="text-xs">
                       <Crown className="h-2.5 w-2.5 mr-1" />
                       Host
                     </Badge>
@@ -194,7 +193,7 @@ export default function SessionHeader({
                 </div>
                 
                 {/* Mobile Stats Row */}
-                <CardDescription className="flex items-center space-x-3 mt-2">
+                <div className="flex items-center space-x-3 mt-1 text-xs text-muted-foreground">
                   <div className="flex items-center space-x-1">
                     <Users className="h-3 w-3" />
                     <span>{participantCount} online</span>
@@ -226,24 +225,24 @@ export default function SessionHeader({
                       </>
                     )}
                   </Badge>
-                </CardDescription>
+                </div>
               </div>
             </div>
             
             {/* Mobile Menu Trigger */}
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="h-8 w-8 p-0">
                   <Menu className="h-4 w-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 border-0 bg-card/95 backdrop-blur">
+              <SheetContent side="right" className="w-80 bg-card border-border">
                 <SheetHeader>
-                  <SheetTitle className="flex items-center space-x-2 text-xl">
-                    <Activity className="h-6 w-6 text-primary" />
+                  <SheetTitle className="flex items-center space-x-2">
+                    <Activity className="h-5 w-5 text-primary" />
                     <span>Session Controls</span>
                   </SheetTitle>
-                  <SheetDescription>
+                  <SheetDescription className="text-muted-foreground">
                     Manage your collaboration session and settings
                   </SheetDescription>
                 </SheetHeader>
@@ -251,47 +250,51 @@ export default function SessionHeader({
                 <div className="space-y-6 mt-6">
                   {/* Session Status */}
                   <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-foreground">Status</h4>
-                    <Card className={cn("border-2", syncStatusConfig.borderColor, syncStatusConfig.bgColor)}>
-                      <CardContent className="flex items-center space-x-3 p-4">
+                    <h4 className="text-sm font-medium text-foreground">Status</h4>
+                    <div className={cn(
+                      "rounded-lg border p-3",
+                      syncStatusConfig.borderColor,
+                      syncStatusConfig.bgColor
+                    )}>
+                      <div className="flex items-center space-x-3">
                         <syncStatusConfig.icon className={cn(
-                          "h-5 w-5", 
+                          "h-4 w-4", 
                           syncStatusConfig.color,
                           syncStatusConfig.animate && "animate-spin"
                         )} />
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground">
+                          <p className="text-sm font-medium text-foreground">
                             {syncStatusConfig.label}
                           </p>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs text-muted-foreground">
                             {syncStatusConfig.description}
                           </p>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   </div>
                   
                   {/* Quick Actions */}
                   <div className="space-y-3">
-                    <h4 className="text-sm font-semibold text-foreground">Quick Actions</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button variant="outline" onClick={togglePreview}>
-                        {isPreviewVisible ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                    <h4 className="text-sm font-medium text-foreground">Quick Actions</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" size="sm" onClick={togglePreview}>
+                        {isPreviewVisible ? <EyeOff className="h-3 w-3 mr-2" /> : <Eye className="h-3 w-3 mr-2" />}
                         Preview
                       </Button>
                       
-                      <Button variant="outline" onClick={handleCopyLink}>
-                        <Share2 className="h-4 w-4 mr-2" />
-                        Share
+                      <Button variant="outline" size="sm" onClick={handleCopyLink}>
+                        <Copy className="h-3 w-3 mr-2" />
+                        Copy
                       </Button>
                       
-                      <Button variant="outline" onClick={handleSaveAll}>
-                        <Save className="h-4 w-4 mr-2" />
-                        Save All
+                      <Button variant="outline" size="sm" onClick={handleSaveAll}>
+                        <Save className="h-3 w-3 mr-2" />
+                        Save
                       </Button>
                       
-                      <Button variant="outline" onClick={handleExport}>
-                        <Download className="h-4 w-4 mr-2" />
+                      <Button variant="outline" size="sm" onClick={handleExport}>
+                        <Download className="h-3 w-3 mr-2" />
                         Export
                       </Button>
                     </div>
@@ -300,13 +303,14 @@ export default function SessionHeader({
                   {/* Host Actions */}
                   {isHost && (
                     <div className="space-y-3">
-                      <h4 className="text-sm font-semibold text-foreground">Host Actions</h4>
-                      <div className="space-y-3">
+                      <h4 className="text-sm font-medium text-foreground">Host Actions</h4>
+                      <div className="space-y-2">
                         <Button 
                           onClick={showInviteModal}
-                          className="w-full bg-primary hover:bg-primary/90 shadow-md"
+                          className="w-full"
+                          size="sm"
                         >
-                          <UserPlus className="h-4 w-4 mr-2" />
+                          <UserPlus className="h-3 w-3 mr-2" />
                           Invite Collaborators
                         </Button>
                         
@@ -315,15 +319,16 @@ export default function SessionHeader({
                           onClick={showEndSessionModal}
                           disabled={endSessionLoading}
                           className="w-full"
+                          size="sm"
                         >
                           {endSessionLoading ? (
                             <>
-                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                              Ending Session...
+                              <Loader2 className="h-3 w-3 mr-2 animate-spin" />
+                              Ending...
                             </>
                           ) : (
                             <>
-                              <StopCircle className="h-4 w-4 mr-2" />
+                              <StopCircle className="h-3 w-3 mr-2" />
                               End Session
                             </>
                           )}
@@ -335,37 +340,37 @@ export default function SessionHeader({
                   {/* User Actions */}
                   {currentUser && (
                     <div className="space-y-3">
-                      <h4 className="text-sm font-semibold text-foreground">Account</h4>
-                      <Card className="border-0 bg-muted/30">
-                        <CardContent className="flex items-center space-x-3 p-4">
-                          <Avatar className="h-10 w-10 border-2 border-background shadow-sm">
+                      <h4 className="text-sm font-medium text-foreground">Account</h4>
+                      <div className="bg-muted/30 rounded-lg p-3">
+                        <div className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
                             <AvatarImage src={currentUser.avatar} />
-                            <AvatarFallback>
+                            <AvatarFallback className="text-xs">
                               {currentUser.displayName?.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-foreground truncate">
+                            <p className="text-sm font-medium text-foreground truncate">
                               {currentUser.displayName}
                             </p>
-                            <p className="text-sm text-muted-foreground truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {currentUser.email}
                             </p>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                      </div>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         {onOpenSettings && (
-                          <Button variant="ghost" onClick={onOpenSettings} className="w-full justify-start">
-                            <Settings className="h-4 w-4 mr-2" />
+                          <Button variant="ghost" onClick={onOpenSettings} className="w-full justify-start" size="sm">
+                            <Settings className="h-3 w-3 mr-2" />
                             Settings
                           </Button>
                         )}
                         
                         {onLogout && (
-                          <Button variant="ghost" onClick={onLogout} className="w-full justify-start text-destructive hover:text-destructive">
-                            <LogOut className="h-4 w-4 mr-2" />
+                          <Button variant="ghost" onClick={onLogout} className="w-full justify-start text-destructive hover:text-destructive" size="sm">
+                            <LogOut className="h-3 w-3 mr-2" />
                             Sign Out
                           </Button>
                         )}
@@ -376,22 +381,21 @@ export default function SessionHeader({
               </SheetContent>
             </Sheet>
           </div>
-        </CardHeader>
-      </Card>
+        </div>
+      </div>
     )
   }
 
-  // Desktop Layout - Enhanced Professional Design
+  // Desktop Layout - VS Code style
   return (
-    <Card className="border-0 bg-card/80 backdrop-blur shadow-lg">
-      <CardContent className="p-4">
+    <div className="border-b border-border bg-card/80 backdrop-blur">
+      <div className="p-4">
         <div className="flex items-center justify-between">
           {/* Left Section - Session Info */}
           <div className="flex items-center space-x-6 min-w-0 flex-1">
-            {/* Session Title & Metadata */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center space-x-4">
-                <h1 className="text-2xl font-bold text-foreground truncate">
+                <h1 className="text-xl font-semibold text-foreground truncate">
                   {session.title}
                 </h1>
                 
@@ -402,51 +406,41 @@ export default function SessionHeader({
                     <TooltipTrigger asChild>
                       <div className="flex items-center space-x-2">
                         <div className={cn(
-                          "w-3 h-3 rounded-full",
-                          session.isActive ? "bg-green-500 animate-pulse shadow-lg shadow-green-500/50" : "bg-gray-400"
+                          "w-2 h-2 rounded-full",
+                          session.isActive ? "bg-green-500 animate-pulse" : "bg-muted-foreground"
                         )} />
-                        <Badge className={cn(
-                          "font-medium",
-                          session.isActive 
-                            ? "bg-green-100 text-green-700 dark:bg-green-950/20 dark:text-green-400 border-green-500/20" 
-                            : "bg-gray-100 text-gray-700 dark:bg-gray-900/20 dark:text-gray-400"
-                        )}>
+                        <Badge variant={session.isActive ? "default" : "secondary"}>
                           <Zap className="h-3 w-3 mr-1" />
                           {session.isActive ? "Live" : "Ended"}
                         </Badge>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Session is {session.isActive ? 'active' : 'ended'}</p>
+                      Session is {session.isActive ? 'active' : 'ended'}
                     </TooltipContent>
                   </Tooltip>
                   
-                  <Separator orientation="vertical" className="h-6" />
+                  <Separator orientation="vertical" className="h-4" />
                   
                   {/* Participants */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-400 border-blue-500/20">
+                      <Badge variant="outline">
                         <Users className="h-3 w-3 mr-1" />
                         {participantCount}
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{participantCount} participant{participantCount !== 1 ? 's' : ''} online</p>
+                      {participantCount} participant{participantCount !== 1 ? 's' : ''} online
                     </TooltipContent>
                   </Tooltip>
                   
-                  <Separator orientation="vertical" className="h-6" />
+                  <Separator orientation="vertical" className="h-4" />
                   
                   {/* Sync Status */}
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <Badge className={cn(
-                        "font-medium border-2",
-                        syncStatusConfig.bgColor,
-                        syncStatusConfig.borderColor,
-                        syncStatusConfig.color
-                      )}>
+                      <Badge variant="outline" className={cn(syncStatusConfig.color)}>
                         <syncStatusConfig.icon className={cn(
                           "h-3 w-3 mr-1",
                           syncStatusConfig.animate && "animate-spin"
@@ -455,15 +449,15 @@ export default function SessionHeader({
                       </Badge>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{syncStatusConfig.description}</p>
+                      {syncStatusConfig.description}
                     </TooltipContent>
                   </Tooltip>
                   
-                  <Separator orientation="vertical" className="h-6" />
+                  <Separator orientation="vertical" className="h-4" />
                   
                   {/* Host Badge */}
                   {isHost && (
-                    <Badge className="bg-orange-100 text-orange-700 dark:bg-orange-950/20 dark:text-orange-400 border-orange-500/20">
+                    <Badge variant="secondary">
                       <Crown className="h-3 w-3 mr-1" />
                       Host
                     </Badge>
@@ -494,80 +488,60 @@ export default function SessionHeader({
             <div className="flex items-center space-x-2">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={togglePreview}
-                  >
-                    {isPreviewVisible ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                  <Button size="sm" variant="outline" onClick={togglePreview}>
+                    {isPreviewVisible ? <EyeOff className="h-3 w-3 mr-2" /> : <Eye className="h-3 w-3 mr-2" />}
                     Preview
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{isPreviewVisible ? "Hide preview" : "Show preview"}</p>
+                  {isPreviewVisible ? "Hide preview" : "Show preview"}
                 </TooltipContent>
               </Tooltip>
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={handleCopyLink}
-                  >
-                    <Copy className="h-4 w-4 mr-2" />
+                  <Button size="sm" variant="outline" onClick={handleCopyLink}>
+                    <Copy className="h-3 w-3 mr-2" />
                     Copy
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Copy session link</p>
+                  Copy session link
                 </TooltipContent>
               </Tooltip>
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={handleSaveAll}
-                  >
-                    <Save className="h-4 w-4 mr-2" />
+                  <Button size="sm" variant="outline" onClick={handleSaveAll}>
+                    <Save className="h-3 w-3 mr-2" />
                     Save
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Save all files</p>
+                  Save all files
                 </TooltipContent>
               </Tooltip>
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={handleExport}
-                  >
-                    <Download className="h-4 w-4 mr-2" />
+                  <Button size="sm" variant="outline" onClick={handleExport}>
+                    <Download className="h-3 w-3 mr-2" />
                     Export
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Export session</p>
+                  Export session
                 </TooltipContent>
               </Tooltip>
             </div>
             
-            <Separator orientation="vertical" className="h-8" />
+            <Separator orientation="vertical" className="h-6" />
             
             {/* Primary Actions */}
             {isHost && (
               <div className="flex items-center space-x-2">
-                <Button 
-                  size="sm"
-                  onClick={showInviteModal}
-                  className="bg-primary hover:bg-primary/90 shadow-md"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
+                <Button size="sm" onClick={showInviteModal}>
+                  <UserPlus className="h-3 w-3 mr-2" />
                   Invite
                 </Button>
                 
@@ -579,12 +553,12 @@ export default function SessionHeader({
                 >
                   {endSessionLoading ? (
                     <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      <Loader2 className="h-3 w-3 mr-2 animate-spin" />
                       Ending...
                     </>
                   ) : (
                     <>
-                      <StopCircle className="h-4 w-4 mr-2" />
+                      <StopCircle className="h-3 w-3 mr-2" />
                       End Session
                     </>
                   )}
@@ -615,7 +589,7 @@ export default function SessionHeader({
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground truncate">
+                        <p className="font-medium text-foreground truncate">
                           {currentUser.displayName}
                         </p>
                         <p className="text-xs text-muted-foreground truncate">
@@ -645,7 +619,7 @@ export default function SessionHeader({
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

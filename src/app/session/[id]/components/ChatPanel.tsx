@@ -1,30 +1,34 @@
+
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
 import { 
   Send, 
   MessageCircle, 
-  Hash, 
   Wifi, 
   WifiOff, 
   X, 
   Loader2,
   MessageSquare,
-  Clock,
   Users,
-  Smile,
-  MoreVertical
+  MoreVertical,
+  Settings,
+  Volume2,
+  VolumeX,
+  Trash2
 } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
 
 interface ChatPanelProps {
@@ -56,20 +60,18 @@ export default function ChatPanel({
   getUserColor,
   onClose
 }: ChatPanelProps) {
+  const [soundEnabled, setSoundEnabled] = useState(true)
+
   const formatTime = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-
-  const formatRelativeTime = (dateString: string) => {
-    const date = new Date(dateString)
     const now = new Date()
-    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60))
+    const today = new Date().setHours(0, 0, 0, 0)
+    const messageDate = new Date(date).setHours(0, 0, 0, 0)
     
-    if (diffInMinutes < 1) return 'Just now'
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`
-    return date.toLocaleDateString()
+    if (messageDate === today) {
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    }
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
   }
 
   const getInitials = (name: string) => {
@@ -78,134 +80,167 @@ export default function ChatPanel({
       .map(n => n.charAt(0))
       .join('')
       .toUpperCase()
-      .slice(0, 2) || '?'
+      .slice(0, 2) || 'U'
   }
 
   const uniqueParticipants = Array.from(
     new Set(messages.map(m => m.user.id))
   ).length
 
+  const clearMessages = () => {
+    // Implementation for clearing messages
+    console.log('Clear messages')
+  }
+
   return (
-    <Card className="h-full border-0 bg-card/80 backdrop-blur shadow-2xl flex flex-col">
-      {/* Header */}
-      <CardHeader className="pb-4 border-b flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-r from-primary to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-                <MessageSquare className="h-5 w-5 text-white" />
-              </div>
-              {connected && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-card animate-pulse" />
-              )}
-            </div>
-            <div className="space-y-1">
-              <CardTitle className="text-lg">Team Chat</CardTitle>
-              <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                <Users className="h-3 w-3" />
-                <span>{uniqueParticipants} participant{uniqueParticipants !== 1 ? 's' : ''}</span>
-                <Separator orientation="vertical" className="h-3" />
-                <div className="flex items-center gap-1">
-                  {connected ? (
-                    <>
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      <span>Online</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                      <span>Reconnecting</span>
-                    </>
-                  )}
-                </div>
-              </div>
+    <div className="h-full bg-[#1e1e1e] border-l border-[#333] flex flex-col">
+      {/* Enhanced Header */}
+      <div className="flex-shrink-0 bg-[#2d2d30] border-b border-[#333]">
+        <div className="flex items-center justify-between px-3 h-10">
+          <div className="flex items-center space-x-2">
+            
+              <MessageSquare className="h-3 w-3 text-white" />
+            
+            <div className="flex flex-col">
+              <span className="text-xs font-medium text-[#cccccc]">Team Chat</span>
             </div>
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
-              <Hash className="h-3 w-3 mr-1" />
-              {messages.length}
-            </Badge>
-            
+          <div className="flex items-center space-x-1">
+            {/* Participant count with better visibility */}
+            {connected && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1 px-2 py-1 rounded bg-[#0e4429] text-[#4ade80]">
+                    <Users className="h-3 w-3" />
+                    <span className="text-xs font-medium">{uniqueParticipants}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {uniqueParticipants} participant{uniqueParticipants !== 1 ? 's' : ''} online
+                </TooltipContent>
+              </Tooltip>
+            )}
+
+            {/* Chat options */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreVertical className="h-4 w-4" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0 hover:bg-[#37373d] text-[#cccccc]"
+                >
+                  <MoreVertical className="h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem>Clear messages</DropdownMenuItem>
-                <DropdownMenuItem>Export chat</DropdownMenuItem>
-                <DropdownMenuItem onClick={onClose}>Close chat</DropdownMenuItem>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setSoundEnabled(!soundEnabled)}>
+                  {soundEnabled ? (
+                    <>
+                      <VolumeX className="h-3 w-3 mr-2" />
+                      Mute notifications
+                    </>
+                  ) : (
+                    <>
+                      <Volume2 className="h-3 w-3 mr-2" />
+                      Enable notifications
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={clearMessages}>
+                  <Trash2 className="h-3 w-3 mr-2" />
+                  Clear messages
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="h-6 w-6 p-0 hover:bg-[#37373d] text-[#cccccc]"
+            >
+              <X className="h-3 w-3" />
+            </Button>
           </div>
         </div>
-      </CardHeader>
-      
-      {/* Content */}
-      <CardContent className="p-0 flex-1 flex flex-col min-h-0">
-        {/* Error Alert */}
-        {chatError && (
-          <div className="p-4 pb-0">
-            <Alert variant="destructive">
-              <AlertDescription>{chatError}</AlertDescription>
-            </Alert>
-          </div>
-        )}
-        
-        {/* Messages Area */}
-        <ScrollArea className="flex-1 px-4">
-          <div className="py-4 space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center py-16 space-y-4">
-                <div className="mx-auto w-16 h-16 bg-muted/50 rounded-full flex items-center justify-center">
-                  <MessageCircle className="h-8 w-8 text-muted-foreground/50" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-lg">No messages yet</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                    Start the conversation! Share ideas, ask questions, or collaborate with your team.
-                  </p>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                  <Smile className="h-4 w-4" />
-                  <span>Type a message below to get started</span>
-                </div>
-              </div>
+
+        {/* Connection status bar */}
+        <div className={cn(
+          "px-3 py-1 text-xs flex items-center justify-between border-b border-[#333]",
+          connected ? "bg-[#0f2719] text-[#4ade80]" : "bg-[#2d1b1b] text-[#f87171]"
+        )}>
+          <div className="flex items-center space-x-1">
+            {connected ? (
+              <>
+                <Wifi className="h-3 w-3" />
+                <span>Connected</span>
+              </>
             ) : (
-              messages.map((message, index) => {
+              <>
+                <WifiOff className="h-3 w-3 animate-pulse" />
+                <span>Reconnecting...</span>
+              </>
+            )}
+          </div>
+          
+          {messages.length > 0 && (
+            <span className="text-[#888888]">{messages.length} message{messages.length !== 1 ? 's' : ''}</span>
+          )}
+        </div>
+      </div>
+      
+      {/* Error Alert - Improved styling */}
+      {chatError && (
+        <div className="px-3 py-2 bg-[#2d1b1b] border-b border-[#4c1d1d]">
+          <div className="text-xs text-[#f87171] flex items-center space-x-2">
+            <div className="w-2 h-2 bg-[#f87171] rounded-full" />
+            <span>{chatError}</span>
+          </div>
+        </div>
+      )}
+      
+      {/* Messages Area - Enhanced */}
+      <ScrollArea className="flex-1">
+        <div className="p-3">
+          {messages.length === 0 ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="mx-auto w-12 h-12 bg-[#2d2d30] rounded-full flex items-center justify-center">
+                <MessageCircle className="h-6 w-6 text-[#888888]" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-sm font-medium text-[#cccccc]">No messages yet</h3>
+                <p className="text-xs text-[#888888] max-w-xs">
+                  Start collaborating! Send a message to your team members.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message, index) => {
                 const isOwnMessage = message.user.id === user?.id
                 const showAvatar = index === 0 || messages[index - 1]?.user.id !== message.user.id
-                const isConsecutive = index > 0 && messages[index - 1]?.user.id === message.user.id
+                const showTimestamp = showAvatar || 
+                  (index > 0 && new Date(message.createdAt).getTime() - new Date(messages[index - 1].createdAt).getTime() > 300000) // 5 minutes
                 
                 return (
-                  <div key={message.id} className={cn(
-                    "group relative",
-                    isConsecutive && "mt-1"
-                  )}>
-                    <div className={cn(
-                      "flex items-start gap-3",
-                      isOwnMessage ? "flex-row-reverse" : ""
-                    )}>
+                  <div key={message.id} className="group">
+                    <div className="flex items-start space-x-3">
                       {/* Avatar */}
                       <div className="flex-shrink-0">
                         {showAvatar ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Avatar className="h-8 w-8 border-2 border-background shadow-sm">
-                                <AvatarImage src={message.user.avatar} />
-                                <AvatarFallback 
-                                  className="text-xs font-semibold text-white"
-                                  style={{ backgroundColor: getUserColor(message.user.id) }}
-                                >
-                                  {getInitials(message.user.displayName)}
-                                </AvatarFallback>
-                              </Avatar>
+                              <div 
+                                className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium text-white shadow-sm"
+                                style={{ backgroundColor: getUserColor(message.user.id) }}
+                              >
+                                {getInitials(message.user.displayName)}
+                              </div>
                             </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{message.user.displayName}</p>
+                            <TooltipContent side="right">
+                              {message.user.displayName}
                             </TooltipContent>
                           </Tooltip>
                         ) : (
@@ -214,165 +249,114 @@ export default function ChatPanel({
                       </div>
 
                       {/* Message Content */}
-                      <div className={cn(
-                        "flex-1 min-w-0 max-w-[85%]",
-                        isOwnMessage ? "flex flex-col items-end" : ""
-                      )}>
-                        {/* User name and timestamp */}
+                      <div className="flex-1 min-w-0">
+                        {/* User info header */}
                         {showAvatar && (
-                          <div className={cn(
-                            "flex items-center gap-2 mb-1",
-                            isOwnMessage ? "flex-row-reverse" : ""
-                          )}>
+                          <div className="flex items-center space-x-2 mb-1">
                             <span className={cn(
-                              "text-sm font-semibold",
-                              isOwnMessage ? 'text-primary' : 'text-foreground'
+                              "text-sm font-medium",
+                              isOwnMessage ? 'text-[#4fc1ff]' : 'text-[#cccccc]'
                             )}>
-                              {isOwnMessage ? 'You' : message.user.displayName}
+                              {isOwnMessage ? 'User One (You)' : message.user.displayName}
                             </span>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <span className="text-xs text-muted-foreground cursor-help">
-                                  {formatRelativeTime(message.createdAt)}
-                                </span>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="flex items-center space-x-1">
-                                  <Clock className="h-3 w-3" />
-                                  <span>{formatTime(message.createdAt)}</span>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
+                            {showTimestamp && (
+                              <span className="text-xs text-[#888888]">
+                                {formatTime(message.createdAt)}
+                              </span>
+                            )}
                           </div>
                         )}
                         
                         {/* Message bubble */}
                         <div className={cn(
-                          "relative rounded-2xl px-4 py-3 text-sm break-words transition-all duration-200 max-w-full",
-                          "border shadow-sm group-hover:shadow-md",
-                          isOwnMessage 
-                            ? "bg-primary text-primary-foreground border-primary/20 shadow-primary/10" 
-                            : "bg-muted/50 text-foreground border-border/50 hover:bg-muted/80",
-                          showAvatar ? "" : "mt-1"
+                          "relative group-hover:shadow-sm transition-shadow",
+                          !showAvatar && "ml-0"
                         )}>
-                          <div className="whitespace-pre-wrap">
+                          <div className={cn(
+                            "inline-block rounded-lg px-3 py-2 text-sm max-w-[85%] break-words",
+                            isOwnMessage 
+                              ? "bg-[#0969da] text-white" 
+                              : "bg-[#2d2d30] text-[#e6edf3] border border-[#333]"
+                          )}>
                             {message.content}
                           </div>
-                          
-                          {/* Message status indicator for own messages */}
-                          {isOwnMessage && (
-                            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-card rounded-full border border-primary/20 flex items-center justify-center">
-                              <div className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 )
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </ScrollArea>
-        
-        {/* Message Input */}
-        <div className="p-4 border-t bg-muted/20 flex-shrink-0">
-          <div className="space-y-3">
-            <div className="flex items-end gap-3">
-              <div className="flex-1 relative">
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder={connected ? "Type your message..." : "Connecting to chat..."}
-                  className={cn(
-                    "min-h-[44px] resize-none pr-16 transition-all",
-                    "bg-background border-border/50",
-                    "focus:border-primary/50 focus:ring-primary/20",
-                    "disabled:opacity-50"
-                  )}
-                  onKeyPress={handleChatKeyPress}
-                  disabled={!connected || isSendingMessage}
-                  maxLength={500}
-                />
-                
-                {/* Character count */}
-                <div className="absolute right-12 bottom-3 text-xs text-muted-foreground font-mono">
-                  <span className={cn(
-                    "transition-colors",
-                    newMessage.length > 450 ? "text-orange-500" : "",
-                    newMessage.length > 480 ? "text-red-500 font-semibold" : ""
-                  )}>
-                    {newMessage.length}/500
-                  </span>
-                </div>
-              </div>
+              })}
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
+      
+      {/* Enhanced Message Input */}
+      <div className="flex-shrink-0 p-3 bg-[#2d2d30] border-t border-[#333]">
+        <div className="space-y-2">
+          <div className="flex items-end space-x-2">
+            <div className="flex-1 relative">
+              <Input
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder={connected ? "Type your message..." : "Connecting to chat..."}
+                className={cn(
+                  "min-h-[36px] text-sm bg-[#1e1e1e] border-[#333] text-[#cccccc] resize-none",
+                  "placeholder:text-[#888888] focus:border-[#0969da] focus:ring-1 focus:ring-[#0969da]",
+                  "disabled:opacity-50 disabled:cursor-not-allowed pr-12"
+                )}
+                onKeyPress={handleChatKeyPress}
+                disabled={!connected || isSendingMessage}
+                maxLength={500}
+              />
               
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={sendMessage} 
-                    disabled={!connected || !newMessage.trim() || isSendingMessage}
-                    className={cn(
-                      "h-11 px-4 transition-all duration-200 shadow-sm hover:shadow-md",
-                      "disabled:opacity-50"
-                    )}
-                  >
-                    {isSendingMessage ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Send message {!connected ? '(Reconnecting...)' : ''}</p>
-                </TooltipContent>
-              </Tooltip>
+              {/* Character counter */}
+              <div className={cn(
+                "absolute right-3 bottom-2 text-xs pointer-events-none",
+                newMessage.length > 450 ? "text-orange-400" : "text-[#888888]",
+                newMessage.length > 480 && "text-red-400 font-medium"
+              )}>
+                {newMessage.length}/500
+              </div>
             </div>
             
-            {/* Status Bar */}
-            <div className="flex justify-between items-center text-xs">
-              <div className="flex items-center space-x-3">
-                <div className={cn(
-                  "flex items-center gap-1.5 transition-colors",
-                  connected ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
-                )}>
-                  {connected ? (
-                    <>
-                      <Wifi className="h-3 w-3" />
-                      <span className="font-medium">Connected</span>
-                    </>
-                  ) : (
-                    <>
-                      <WifiOff className="h-3 w-3" />
-                      <span className="font-medium">Reconnecting...</span>
-                    </>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={sendMessage} 
+                  disabled={!connected || !newMessage.trim() || isSendingMessage}
+                  className={cn(
+                    "h-9 w-9 p-0 shrink-0",
+                    "bg-[#16821b] hover:bg-[#1a9268] disabled:bg-[#333] disabled:text-[#666]",
+                    "transition-colors"
                   )}
-                </div>
-                
-                {uniqueParticipants > 1 && (
-                  <>
-                    <Separator orientation="vertical" className="h-3" />
-                    <div className="flex items-center gap-1 text-muted-foreground">
-                      <Users className="h-3 w-3" />
-                      <span>{uniqueParticipants} online</span>
-                    </div>
-                  </>
-                )}
+                >
+                  {isSendingMessage ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {!connected ? 'Reconnecting...' : !newMessage.trim() ? 'Type a message' : 'Send message'}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          
+          {/* Typing indicator space */}
+          <div className="h-4 flex items-center">
+            {newMessage && (
+              <div className="text-xs text-[#888888] flex items-center space-x-1">
+                <span>Press</span>
+                <kbd className="px-1 py-0.5 bg-[#1e1e1e] border border-[#333] rounded text-xs">Enter</kbd>
+                <span>to send</span>
               </div>
-              
-              {newMessage && (
-                <div className="text-muted-foreground flex items-center gap-1">
-                  <span>Press</span>
-                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-xs border">Enter</kbd>
-                  <span>to send</span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

@@ -16,7 +16,6 @@
 //   Zap, Grid3X3, PanelLeft, PanelRight, MessageCircle 
 // } from 'lucide-react';
 
-// // Component imports
 // import SessionHeader from './components/SessionHeader';
 // import FileTabs from './components/FileTabs';
 // import EditorArea from './components/EditorArea';
@@ -25,7 +24,7 @@
 // import InviteModal from './components/InviteModal';
 // import EndSessionModal from './components/EndSessionModal';
 // import SessionEndedModal from './components/SessionEndedModal';
-
+// import Sidebar from './components/Sidebar';
 // import { languageConfigs } from './utils/languageConfigs';
 
 // import { Button } from '@/components/ui/button';
@@ -76,6 +75,8 @@
 //   selection?: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number };
 //   color: string;
 //   timestamp: number;
+//   isActive: boolean;
+//   lastActivity: number;
 // }
 
 // interface FileData {
@@ -116,50 +117,36 @@
 //   createdAt: string;
 // }
 
-// // Layout Management Hook
-// type LayoutMode = 'focus' | 'split' | 'preview' | 'chat' | 'participants' | 'output';
-// type PanelState = 'hidden' | 'collapsed' | 'expanded';
+// type SidebarMode = 'hidden' | 'participants' | 'chat';
+// type PanelState = 'hidden' | 'expanded';
 
 // interface LayoutState {
-//   mode: LayoutMode;
-//   sidebar: PanelState;
-//   chat: PanelState;
-//   participants: PanelState;
+//   sidebar: SidebarMode;
 //   preview: PanelState;
 //   output: PanelState;
-//   fullscreen: boolean;
 // }
 
+// // Custom hooks
 // const useLayoutManager = () => {
 //   const [layout, setLayout] = useState<LayoutState>({
-//     mode: 'focus',
-//     sidebar: 'collapsed',
-//     chat: 'hidden',
-//     participants: 'hidden',
+//     sidebar: 'hidden',
 //     preview: 'hidden',
 //     output: 'hidden',
-//     fullscreen: false
 //   });
 
 //   const [isMobile, setIsMobile] = useState(false);
-//   const [isTablet, setIsTablet] = useState(false);
 
 //   useEffect(() => {
 //     const checkLayout = () => {
 //       const width = window.innerWidth;
 //       const mobile = width < 768;
-//       const tablet = width >= 768 && width < 1024;
       
 //       setIsMobile(mobile);
-//       setIsTablet(tablet);
       
 //       if (mobile) {
 //         setLayout(prev => ({
 //           ...prev,
-//           mode: 'focus',
 //           sidebar: 'hidden',
-//           chat: 'hidden',
-//           participants: 'hidden',
 //           preview: 'hidden',
 //           output: 'hidden'
 //         }));
@@ -171,89 +158,26 @@
 //     return () => window.removeEventListener('resize', checkLayout);
 //   }, []);
 
-//   const switchMode = useCallback((mode: LayoutMode) => {
-//     setLayout(prev => {
-//       switch (mode) {
-//         case 'focus':
-//           return {
-//             ...prev,
-//             mode,
-//             sidebar: 'collapsed',
-//             chat: 'hidden',
-//             participants: 'hidden',
-//             preview: 'hidden',
-//             output: 'hidden'
-//           };
-//         case 'chat':
-//           return {
-//             ...prev,
-//             mode,
-//             sidebar: 'hidden',
-//             chat: 'expanded',
-//             participants: 'hidden',
-//             preview: 'hidden',
-//             output: 'hidden'
-//           };
-//         case 'participants':
-//           return {
-//             ...prev,
-//             mode,
-//             sidebar: 'hidden',
-//             chat: 'hidden',
-//             participants: 'expanded',
-//             preview: 'hidden',
-//             output: 'hidden'
-//           };
-//         case 'preview':
-//           return {
-//             ...prev,
-//             mode,
-//             sidebar: 'collapsed',
-//             chat: 'hidden',
-//             participants: 'hidden',
-//             preview: 'expanded',
-//             output: 'hidden'
-//           };
-//         case 'output':
-//           return {
-//             ...prev,
-//             mode,
-//             sidebar: 'collapsed',
-//             chat: 'hidden',
-//             participants: 'hidden',
-//             preview: 'hidden',
-//             output: 'expanded'
-//           };
-//         default:
-//           return prev;
-//       }
-//     });
+//   const setSidebarMode = useCallback((mode: SidebarMode) => {
+//     setLayout(prev => ({ ...prev, sidebar: mode }));
 //   }, []);
 
-//   const togglePanel = useCallback((panel: 'chat' | 'participants' | 'preview' | 'output') => {
+//   const togglePanel = useCallback((panel: 'preview' | 'output') => {
 //     setLayout(prev => ({
 //       ...prev,
-//       [panel]: prev[panel] === 'hidden' ? 'expanded' : 'hidden',
-//       // Hide other panels when opening one
-//       ...(panel === 'chat' && prev.chat === 'hidden' && { participants: 'hidden' }),
-//       ...(panel === 'participants' && prev.participants === 'hidden' && { chat: 'hidden' })
+//       [panel]: prev[panel] === 'hidden' ? 'expanded' : 'hidden'
 //     }));
 //   }, []);
 
 //   return {
 //     layout,
 //     isMobile,
-//     isTablet,
-//     switchMode,
+//     setSidebarMode,
 //     togglePanel,
-//     toggleFullscreen: useCallback(() => {
-//       setLayout(prev => ({ ...prev, fullscreen: !prev.fullscreen }));
-//     }, []),
 //     setLayout
 //   };
 // };
 
-// // Panel Management Hook
 // const usePanelManager = () => {
 //   const [sidebarWidth, setSidebarWidth] = useState(350);
 //   const [outputWidth, setOutputWidth] = useState(450);
@@ -305,334 +229,16 @@
 //   return { sidebarPanel, outputPanel };
 // };
 
-// // Chat Panel Component
-// const ChatPanel = ({ 
-//   user, messages, newMessage, setNewMessage, chatError, connected, 
-//   isSendingMessage, sendMessage, handleChatKeyPress, messagesEndRef, 
-//   getUserColor, onClose 
-// }: any) => {
-//   const formatTime = (dateString: string) => {
-//     const date = new Date(dateString);
-//     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-//   };
-
-//   return (
-//     <div className="h-full bg-slate-900/95 border-r border-slate-700/50 backdrop-blur-xl flex flex-col">
-//       {/* Chat Header */}
-//       <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center space-x-3">
-//             <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-//               <MessageSquare className="h-4 w-4 text-emerald-400" />
-//             </div>
-//             <div>
-//               <h3 className="text-sm font-semibold text-slate-100">Team Chat</h3>
-//               <p className="text-xs text-slate-400">Real-time collaboration</p>
-//             </div>
-//           </div>
-//           <div className="flex items-center space-x-2">
-//             <div className={cn(
-//               "w-2 h-2 rounded-full transition-colors",
-//               connected ? "bg-emerald-400 shadow-lg shadow-emerald-400/50" : "bg-red-400"
-//             )} />
-//             <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-//               <Hash className="h-2.5 w-2.5 mr-1" />
-//               {messages.length}
-//             </Badge>
-//             <Button 
-//               size="sm" 
-//               variant="ghost" 
-//               onClick={onClose}
-//               className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
-//               title="Close Chat"
-//             >
-//               <X className="h-4 w-4" />
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-      
-//       {/* Chat Content */}
-//       <div className="flex-1 flex flex-col min-h-0 p-4">
-//         {chatError && (
-//           <Alert variant="destructive" className="mb-3 bg-red-500/10 border-red-500/30 text-red-400">
-//             <AlertDescription className="text-sm">{chatError}</AlertDescription>
-//           </Alert>
-//         )}
-        
-//         {/* Messages Area */}
-//         <div className="flex-1 mb-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-//           <div className="space-y-4">
-//             {messages.length === 0 ? (
-//               <div className="text-center text-slate-400 py-12 space-y-3">
-//                 <div className="p-4 bg-emerald-500/5 rounded-full w-fit mx-auto">
-//                   <MessageCircle className="h-12 w-12 opacity-50" />
-//                 </div>
-//                 <div>
-//                   <p className="font-medium">No messages yet</p>
-//                   <p className="text-xs opacity-75">Start the conversation! 💬</p>
-//                 </div>
-//               </div>
-//             ) : (
-//               messages.map((message: any) => (
-//                 <div key={message.id} className="group">
-//                   <div className="flex items-start space-x-3">
-//                     <div 
-//                       className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 mt-0.5 shadow-lg"
-//                       style={{ backgroundColor: getUserColor(message.user.id) }}
-//                     >
-//                       {message.user.displayName?.charAt(0).toUpperCase()}
-//                     </div>
-//                     <div className="flex-1 min-w-0">
-//                       <div className="flex items-center space-x-2 mb-1">
-//                         <span className={cn(
-//                           "text-sm font-medium truncate",
-//                           message.user.id === user?.id ? 'text-blue-400' : 'text-slate-200'
-//                         )}>
-//                           {message.user.displayName}
-//                           {message.user.id === user?.id && ' (You)'}
-//                         </span>
-//                         <span className="text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-//                           {formatTime(message.createdAt)}
-//                         </span>
-//                       </div>
-//                       <div className={cn(
-//                         "text-sm rounded-xl px-4 py-2 border transition-all duration-200 backdrop-blur-sm",
-//                         message.user.id === user?.id 
-//                           ? 'bg-blue-500/10 border-blue-500/30 text-blue-100 ml-0' 
-//                           : 'bg-slate-800/50 border-slate-700/30 text-slate-200'
-//                       )}>
-//                         {message.content}
-//                       </div>
-//                     </div>
-//                   </div>
-//                 </div>
-//               ))
-//             )}
-//             <div ref={messagesEndRef} />
-//           </div>
-//         </div>
-        
-//         {/* Message Input */}
-//         <div className="space-y-2">
-//           <div className="flex space-x-2">
-//             <Input
-//               value={newMessage}
-//               onChange={(e) => setNewMessage(e.target.value)}
-//               placeholder={connected ? "Type your message..." : "Connecting to chat..."}
-//               className="text-sm bg-slate-800/50 border-slate-700/50 focus:border-emerald-500/50 backdrop-blur-sm"
-//               onKeyPress={handleChatKeyPress}
-//               disabled={!connected || isSendingMessage}
-//               maxLength={500}
-//             />
-//             <Button 
-//               size="sm" 
-//               onClick={sendMessage} 
-//               disabled={!connected || !newMessage.trim() || isSendingMessage}
-//               className="px-3 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25"
-//             >
-//               {isSendingMessage ? (
-//                 <Loader2 className="h-4 w-4 animate-spin" />
-//               ) : (
-//                 <Send className="h-4 w-4" />
-//               )}
-//             </Button>
-//           </div>
-          
-//           {/* Status */}
-//           <div className="flex justify-between items-center text-xs text-slate-400">
-//             <div className="flex items-center space-x-2">
-//               {connected ? (
-//                 <>
-//                   <Wifi className="h-3 w-3 text-emerald-400" />
-//                   <span>Connected</span>
-//                 </>
-//               ) : (
-//                 <>
-//                   <WifiOff className="h-3 w-3 text-red-400" />
-//                   <span>Reconnecting...</span>
-//                 </>
-//               )}
-//             </div>
-//             <span className={cn(
-//               "font-mono text-xs",
-//               newMessage.length > 450 ? "text-yellow-400" : "text-slate-500"
-//             )}>
-//               {newMessage.length}/500
-//             </span>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// // Participants Panel Component
-// const ParticipantsPanel = ({ 
-//   user, session, isHost, onlineUsers, participantCount, getUserColor, 
-//   showParticipantMenu, setShowParticipantMenu, removeParticipant, onClose 
-// }: any) => {
-//   return (
-//     <div className="h-full bg-slate-900/95 border-r border-slate-700/50 backdrop-blur-xl flex flex-col">
-//       {/* Participants Header */}
-//       <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
-//         <div className="flex items-center justify-between">
-//           <div className="flex items-center space-x-3">
-//             <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-//               <Users className="h-4 w-4 text-blue-400" />
-//             </div>
-//             <div>
-//               <h3 className="text-sm font-semibold text-slate-100">Participants</h3>
-//               <p className="text-xs text-slate-400">
-//                 {participantCount} {participantCount === 1 ? 'member' : 'members'} online
-//               </p>
-//             </div>
-//           </div>
-//           <div className="flex items-center space-x-2">
-//             <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-//               <div className="w-2 h-2 bg-emerald-400 rounded-full mr-1 animate-pulse shadow-lg shadow-emerald-400/50" />
-//               {participantCount}
-//             </Badge>
-//             <Button 
-//               size="sm" 
-//               variant="ghost" 
-//               onClick={onClose}
-//               className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
-//               title="Close Participants"
-//             >
-//               <X className="h-4 w-4" />
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-      
-//       {/* Participants Content */}
-//       <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-//         <div className="space-y-3">
-//           {/* Current user */}
-//           <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-xl border border-slate-700/30 backdrop-blur-sm group">
-//             <div className="flex items-center space-x-3 min-w-0 flex-1">
-//               <div className="relative">
-//                 <div 
-//                   className="w-10 h-10 rounded-full border-2 border-slate-700 shadow-lg flex items-center justify-center text-sm font-semibold text-white"
-//                   style={{ backgroundColor: getUserColor(user.id) }}
-//                 >
-//                   {user?.displayName?.charAt(0).toUpperCase()}
-//                 </div>
-//                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-lg shadow-emerald-400/50" />
-//               </div>
-//               <div className="min-w-0 flex-1">
-//                 <div className="flex items-center space-x-2">
-//                   <span className="text-sm font-semibold text-slate-100 truncate">
-//                     {user?.displayName}
-//                   </span>
-//                   <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-xs">
-//                     You
-//                   </Badge>
-//                 </div>
-//                 {session.owner.id === user?.id && (
-//                   <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs mt-1">
-//                     <Crown className="h-2.5 w-2.5 mr-1" />
-//                     Host
-//                   </Badge>
-//                 )}
-//               </div>
-//             </div>
-//           </div>
-          
-//           {/* Other online users */}
-//           {onlineUsers
-//             .filter((u: any) => u.userId !== user?.id)
-//             .map((participant: any) => (
-//               <div key={participant.userId} className="flex items-center justify-between p-3 bg-slate-800/30 rounded-xl border border-slate-700/30 backdrop-blur-sm group hover:bg-slate-800/50 transition-all duration-200">
-//                 <div className="flex items-center space-x-3 min-w-0 flex-1">
-//                   <div className="relative">
-//                     <div 
-//                       className="w-10 h-10 rounded-full border-2 border-slate-700 shadow-lg flex items-center justify-center text-sm font-semibold text-white"
-//                       style={{ backgroundColor: getUserColor(participant.userId) }}
-//                     >
-//                       {participant.displayName?.charAt(0).toUpperCase()}
-//                     </div>
-//                     <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-lg shadow-emerald-400/50" />
-//                   </div>
-//                   <div className="min-w-0 flex-1">
-//                     <div className="flex items-center space-x-2">
-//                       <span className="text-sm font-semibold text-slate-100 truncate">
-//                         {participant.displayName}
-//                       </span>
-//                       {session.owner.id === participant.userId && (
-//                         <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
-//                           <Crown className="h-2.5 w-2.5 mr-1" />
-//                           Host
-//                         </Badge>
-//                       )}
-//                     </div>
-//                     <div className="flex items-center space-x-1 mt-0.5">
-//                       <UserCheck className="h-2.5 w-2.5 text-emerald-400" />
-//                       <span className="text-xs text-slate-400">Online</span>
-//                     </div>
-//                   </div>
-//                 </div>
-                
-//                 {isHost && session.owner.id !== participant.userId && (
-//                   <div className="relative">
-//                     <Button
-//                       size="sm"
-//                       variant="ghost"
-//                       onClick={() => setShowParticipantMenu(
-//                         showParticipantMenu === participant.userId ? null : participant.userId
-//                       )}
-//                       className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-500/10 hover:text-red-400"
-//                     >
-//                       <MoreVertical className="h-3 w-3" />
-//                     </Button>
-//                     {showParticipantMenu === participant.userId && (
-//                       <div className="absolute right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-20 backdrop-blur-xl">
-//                         <button
-//                           onClick={() => removeParticipant(participant.userId)}
-//                           className="flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full text-left transition-colors"
-//                         >
-//                           <UserMinus className="h-3 w-3 mr-2" />
-//                           Remove from session
-//                         </button>
-//                       </div>
-//                     )}
-//                   </div>
-//                 )}
-//               </div>
-//             ))}
-          
-//           {/* Empty state */}
-//           {participantCount === 1 && (
-//             <div className="text-center text-slate-400 py-12 space-y-4">
-//               <div className="p-4 bg-amber-500/5 rounded-full w-fit mx-auto">
-//                 <Sparkles className="h-12 w-12 opacity-50" />
-//               </div>
-//               <div>
-//                 <p className="font-medium">You're flying solo!</p>
-//                 <p className="text-xs opacity-75">
-//                   {isHost ? 'Invite others to join the collaboration' : 'Waiting for others to join...'}
-//                 </p>
-//               </div>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
 // export default function SessionPage() {
 //   const params = useParams();
 //   const router = useRouter();
 //   const { user } = useAuth();
 //   const { socket, connected, connecting } = useSocket();
   
-//   // Layout and panel management
-//   const { layout, isMobile, isTablet, switchMode, togglePanel } = useLayoutManager();
+//   const { layout, isMobile, setSidebarMode, togglePanel } = useLayoutManager();
 //   const { sidebarPanel, outputPanel } = usePanelManager();
   
-//   // Core state
+//   // State
 //   const [sessionJoined, setSessionJoined] = useState(false);
 //   const [sessionId] = useState(params.id as string);
 //   const [session, setSession] = useState<SessionData | null>(null);
@@ -640,29 +246,24 @@
 //   const [participantCount, setParticipantCount] = useState(1);
 //   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline'>('synced');
   
-//   // File state
 //   const [files, setFiles] = useState<FileData[]>([]);
 //   const [activeFileId, setActiveFileId] = useState<string | null>(null);
 //   const [cursors, setCursors] = useState<{ [key: string]: CursorPosition }>({});
   
-//   // Modals
 //   const [showNewFileModal, setShowNewFileModal] = useState(false);
 //   const [newFileName, setNewFileName] = useState('');
 //   const [newFileLanguage, setNewFileLanguage] = useState('javascript');
 //   const [fileCreationLoading, setFileCreationLoading] = useState(false);
   
-//   // Execution
 //   const [isExecuting, setIsExecuting] = useState(false);
 //   const [executionResult, setExecutionResult] = useState<ExecutionResult | null>(null);
   
-//   // Chat and collaboration
 //   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
 //   const [messages, setMessages] = useState<Message[]>([]);
 //   const [newMessage, setNewMessage] = useState('');
 //   const [chatError, setChatError] = useState('');
 //   const [isSendingMessage, setIsSendingMessage] = useState(false);
   
-//   // Host controls
 //   const [showParticipantMenu, setShowParticipantMenu] = useState<string | null>(null);
 //   const [showInviteModal, setShowInviteModal] = useState(false);
 //   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
@@ -678,18 +279,13 @@
 //   const messageIdRef = useRef<Set<string>>(new Set());
 //   const isRemoteUpdateRef = useRef<{ [key: string]: boolean }>({});
 //   const syncTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
-//   const decorationsRef = useRef<{ [key: string]: string[] }>({});
+//   const cursorElementsRef = useRef<{ [key: string]: HTMLElement }>({});
 
-//   // Computed values
+//   // Derived state
 //   const isHost = session?.owner?.id === user?.id;
 //   const activeFile = files.find(file => file.id === activeFileId);
 
-//   // User colors for cursors
-//   const userColors = [
-//     '#3B82F6', '#EF4444', '#10B981', '#F59E0B', 
-//     '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16',
-//     '#F97316', '#6366F1', '#14B8A6', '#F43F5E'
-//   ];
+//   const userColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1', '#14B8A6', '#F43F5E'];
   
 //   const getUserColor = useCallback((userId: string) => {
 //     const hash = userId.split('').reduce((a, b) => {
@@ -699,175 +295,154 @@
 //     return userColors[Math.abs(hash) % userColors.length];
 //   }, []);
 
-//   // Enhanced cursor decoration with better error handling and logging
-//   const updateCursorDecorations = useCallback((cursorData: CursorPosition, color: string) => {
-//     console.log('🎨 updateCursorDecorations called for:', cursorData.userName, 'at line', cursorData.position.lineNumber);
-    
-//     if (!editorRef.current) {
-//       console.error('❌ No editor ref available');
-//       return;
-//     }
-    
-//     if (!monacoRef.current) {
-//       console.error('❌ No monaco ref available');
-//       return;
-//     }
-    
-//     const { userId, userName, position } = cursorData;
+//   // Cursor management
+//   const updateCursorPosition = useCallback((userId: string, userName: string, color: string, lineNumber: number, columnPosition: number) => {
+//     if (!editorRef.current || !monacoRef.current) return;
     
 //     try {
-//       // Remove existing decorations
-//       if (decorationsRef.current[userId]) {
-//         console.log(`🧹 Removing existing decorations for ${userName}`);
-//         editorRef.current.deltaDecorations(decorationsRef.current[userId], []);
-//         delete decorationsRef.current[userId];
+//       const existingCursor = cursorElementsRef.current[userId];
+//       if (existingCursor) {
+//         existingCursor.remove();
+//         delete cursorElementsRef.current[userId];
 //       }
+
+//       const editorDomNode = editorRef.current.getDomNode();
+//       if (!editorDomNode) return;
+
+//       const editorContainer = editorDomNode.querySelector('.monaco-editor') || editorDomNode;
+//       const model = editorRef.current.getModel();
+//       if (!model) return;
+
+//       const lineCount = model.getLineCount();
+//       const validLine = Math.max(1, Math.min(lineNumber, lineCount));
+//       const lineLength = model.getLineMaxColumn(validLine);
+//       const validColumn = Math.max(1, Math.min(columnPosition, lineLength));
+
+//       const position = editorRef.current.getScrolledVisiblePosition({
+//         lineNumber: validLine,
+//         column: validColumn
+//       });
+
+//       if (!position) return;
+
+//       const lineHeight = editorRef.current.getOption(monacoRef.current.editor.EditorOption.lineHeight);
       
-//       // Create new decorations
-//       const decorations = [
-//         {
-//           range: new monacoRef.current.Range(
-//             position.lineNumber,
-//             position.column,
-//             position.lineNumber,
-//             position.column
-//           ),
-//           options: {
-//             className: `remote-cursor-${userId}`,
-//             beforeContentClassName: `cursor-line-${userId}`,
-//             afterContentClassName: `cursor-label-${userId}`,
-//             stickiness: monacoRef.current.editor.TrackedRangeStickiness.NeverGrowsWhenTypingAtEdges,
+//       const cursorWrapper = document.createElement('div');
+//       cursorWrapper.id = `cursor-wrapper-${userId}`;
+//       cursorWrapper.style.cssText = `
+//         position: absolute;
+//         top: 0;
+//         left: 0;
+//         width: 100%;
+//         height: 100%;
+//         pointer-events: none;
+//         z-index: 1000;
+//         overflow: hidden;
+//       `;
+
+//       const cursorElement = document.createElement('div');
+//       cursorElement.style.cssText = `
+//         position: absolute;
+//         top: ${position.top}px;
+//         left: ${position.left}px;
+//         width: 2px;
+//         height: ${lineHeight}px;
+//         background: ${color};
+//         pointer-events: none;
+//         opacity: 1;
+//         animation: blink-${userId} 1s ease-in-out infinite;
+//       `;
+
+//       const labelElement = document.createElement('span');
+//       labelElement.textContent = userName;
+//       labelElement.style.cssText = `
+//         position: absolute;
+//         top: ${position.top - 16}px;
+//         left: ${position.left}px;
+//         background: ${color} !important;
+//         color: white !important;
+//         padding: 2px 4px !important;
+//         border-radius: 2px !important;
+//         font-size: 10px !important;
+//         font-weight: normal !important;
+//         white-space: nowrap !important;
+//         pointer-events: none !important;
+//         font-family: system-ui, -apple-system, sans-serif !important;
+//         line-height: 1 !important;
+//         display: inline-block !important;
+//         z-index: 1001 !important;
+//       `;
+
+//       if (!document.getElementById(`cursor-anim-${userId}`)) {
+//         const style = document.createElement('style');
+//         style.id = `cursor-anim-${userId}`;
+//         style.textContent = `
+//           @keyframes blink-${userId} {
+//             0%, 70% { opacity: 1; }
+//             71%, 100% { opacity: 0.3; }
 //           }
+//         `;
+//         document.head.appendChild(style);
+//       }
+
+//       cursorWrapper.appendChild(cursorElement);
+//       cursorWrapper.appendChild(labelElement);
+//       editorContainer.appendChild(cursorWrapper);
+      
+//       cursorElementsRef.current[userId] = cursorWrapper;
+
+//       setTimeout(() => {
+//         if (cursorElementsRef.current[userId]) {
+//           cursorElementsRef.current[userId].remove();
+//           delete cursorElementsRef.current[userId];
+          
+//           const animStyle = document.getElementById(`cursor-anim-${userId}`);
+//           if (animStyle) animStyle.remove();
 //         }
-//       ];
-      
-//       // Apply decorations
-//       const newDecorations = editorRef.current.deltaDecorations([], decorations);
-//       decorationsRef.current[userId] = newDecorations;
-      
-//       console.log(`✅ Applied ${newDecorations.length} decorations for ${userName}`);
-      
-//       // Add CSS styles
-//       addCursorStyles(userId, userName, color);
-      
-//       // Force re-render
-//       editorRef.current.render(true);
-      
-//       console.log(`🎉 Cursor decoration complete for ${userName}`);
-      
+//       }, 3000);
+
 //     } catch (error) {
-//       console.error('❌ Error in updateCursorDecorations:', error);
+//       console.error(`Error positioning cursor for ${userName}:`, error);
 //     }
 //   }, []);
 
-//   // Enhanced CSS style injection
-//   const addCursorStyles = useCallback((userId: string, userName: string, color: string) => {
-//     console.log(`🎨 Adding cursor styles for ${userName} with color ${color}`);
-    
-//     try {
-//       // Remove existing styles
-//       const existingStyle = document.getElementById(`cursor-style-${userId}`);
-//       if (existingStyle) {
-//         existingStyle.remove();
-//       }
-      
-//       const style = document.createElement('style');
-//       style.id = `cursor-style-${userId}`;
-      
-//       // Enhanced cursor styles with maximum visibility
-//       style.textContent = `
-//         /* Enhanced blinking cursor for ${userName} */
-//         .monaco-editor .cursor-line-${userId}::before {
-//           content: '' !important;
-//           position: absolute !important;
-//           top: 0 !important;
-//           left: -2px !important;
-//           width: 3px !important;
-//           height: 100% !important;
-//           background: ${color} !important;
-//           z-index: 1000 !important;
-//           animation: cursor-blink-${userId} 1s ease-in-out infinite !important;
-//           pointer-events: none !important;
-//           display: block !important;
-//           opacity: 1 !important;
-//           box-shadow: 0 0 6px ${color}80 !important;
-//         }
-        
-//         /* Enhanced username label for ${userName} */
-//         .monaco-editor .cursor-label-${userId}::after {
-//           content: '${userName.replace(/'/g, "\\'")}' !important;
-//           position: absolute !important;
-//           top: -28px !important;
-//           left: -2px !important;
-//           background: ${color} !important;
-//           color: white !important;
-//           padding: 4px 8px !important;
-//           border-radius: 4px !important;
-//           font-size: 10px !important;
-//           font-weight: 600 !important;
-//           white-space: nowrap !important;
-//           z-index: 1001 !important;
-//           pointer-events: none !important;
-//           display: block !important;
-//           opacity: 1 !important;
-//           font-family: -apple-system, BlinkMacSystemFont, sans-serif !important;
-//           box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
-//           border: 1px solid rgba(255,255,255,0.2) !important;
-//         }
-        
-//         /* Smooth blinking animation for ${userName} */
-//         @keyframes cursor-blink-${userId} {
-//           0%, 50% { opacity: 1 !important; }
-//           51%, 100% { opacity: 0.4 !important; }
-//         }
-//       `;
-      
-//       document.head.appendChild(style);
-//       console.log(`✅ Successfully added cursor styles for ${userName}`);
-      
-//     } catch (error) {
-//       console.error(`❌ Error adding cursor styles for ${userName}:`, error);
+//   const removeCursorStyles = useCallback((userId: string) => {
+//     if (cursorElementsRef.current[userId]) {
+//       cursorElementsRef.current[userId].remove();
+//       delete cursorElementsRef.current[userId];
 //     }
+    
+//     const animStyle = document.getElementById(`cursor-anim-${userId}`);
+//     if (animStyle) animStyle.remove();
 //   }, []);
+
+//   const cleanupInactiveCursors = useCallback(() => {
+//     const now = Date.now();
+//     const inactiveTimeout = 3000;
+    
+//     setCursors(prev => {
+//       const newCursors = { ...prev };
+//       let hasChanges = false;
+      
+//       Object.keys(newCursors).forEach(cursorKey => {
+//         const cursor = newCursors[cursorKey];
+//         const timeSinceActivity = now - (cursor.lastActivity || cursor.timestamp);
+        
+//         if (timeSinceActivity > inactiveTimeout) {
+//           delete newCursors[cursorKey];
+//           removeCursorStyles(cursor.userId);
+//           hasChanges = true;
+//         }
+//       });
+      
+//       return hasChanges ? newCursors : prev;
+//     });
+//   }, [removeCursorStyles]);
 
 //   useEffect(() => {
-//     if (!editorRef.current || !monacoRef.current || !activeFile) {
-//       console.log('⚠️ Editor, monaco, or activeFile not ready for cursor updates');
-//       return;
-//     }
-    
-//     console.log('🔄 Cursor state changed, updating decorations for active file:', activeFile.name);
-//     console.log('📊 Current cursors:', Object.keys(cursors).length);
-    
-//     // Filter cursors for current file only
-//     const currentFileCursors = Object.values(cursors).filter(
-//       cursor => cursor.fileId === activeFile.id && cursor.userId !== user?.id
-//     );
-    
-//     console.log('🎯 Cursors for current file:', currentFileCursors.length);
-    
-//     // Apply decorations for each cursor
-//     currentFileCursors.forEach((cursor, index) => {
-//       console.log(`🎨 Applying decoration ${index + 1}/${currentFileCursors.length} for:`, cursor.userName);
-      
-//       setTimeout(() => {
-//         updateCursorDecorations(cursor, cursor.color);
-//       }, index * 100); // Stagger updates to avoid conflicts
-//     });
-    
-//   }, [cursors, activeFile?.id, user?.id, updateCursorDecorations]);
-
-//   // Clean up cursor styles when users leave
-//   const removeCursorStyles = useCallback((userId: string) => {
-//     const cursorStyle = document.getElementById(`cursor-style-${userId}`);
-//     if (cursorStyle) cursorStyle.remove();
-    
-//     // Remove decorations
-//     if (editorRef.current && decorationsRef.current[userId]) {
-//       editorRef.current.deltaDecorations(decorationsRef.current[userId], []);
-//       delete decorationsRef.current[userId];
-//     }
-//   }, []);
+//     const cleanupInterval = setInterval(cleanupInactiveCursors, 1000);
+//     return () => clearInterval(cleanupInterval);
+//   }, [cleanupInactiveCursors]);
 
 //   // Keyboard shortcuts
 //   useEffect(() => {
@@ -890,25 +465,15 @@
 //             break;
 //           case 'k':
 //             e.preventDefault();
-//             if (layout.chat === 'expanded') {
-//               togglePanel('chat');
-//             } else if (layout.participants === 'expanded') {
-//               togglePanel('participants');
-//             } else {
-//               togglePanel('chat');
-//             }
+//             setSidebarMode(layout.sidebar === 'chat' ? 'hidden' : 'chat');
 //             break;
 //           case 'n':
 //             e.preventDefault();
-//             if (isHost) {
-//               setShowNewFileModal(true);
-//             }
+//             if (isHost) setShowNewFileModal(true);
 //             break;
 //           case 'i':
 //             e.preventDefault();
-//             if (isHost) {
-//               setShowInviteModal(true);
-//             }
+//             if (isHost) setShowInviteModal(true);
 //             break;
 //         }
 //       }
@@ -916,9 +481,9 @@
 
 //     window.addEventListener('keydown', handleKeyDown);
 //     return () => window.removeEventListener('keydown', handleKeyDown);
-//   }, [activeFile, isHost, layout, togglePanel]);
+//   }, [activeFile, isHost, layout.sidebar, setSidebarMode, togglePanel]);
 
-//   // Fetch session data
+//   // Data fetching
 //   const fetchSessionData = useCallback(async () => {
 //     try {
 //       const token = localStorage.getItem('accessToken');
@@ -961,12 +526,10 @@
 //     }
 //   }, [sessionId, activeFileId]);
 
-//   // Socket event handlers with enhanced cursor support
+//   // Socket handlers
 //   useEffect(() => {
 //     if (!socket || !connected || !sessionId || !user?.id) {
-//       if (socket && !connected) {
-//         setSyncStatus('offline');
-//       }
+//       if (socket && !connected) setSyncStatus('offline');
 //       return;
 //     }
 
@@ -980,9 +543,7 @@
 //     });
 
 //     socket.on('user-joined', (data) => {
-//       if (data.participantCount !== undefined) {
-//         setParticipantCount(data.participantCount);
-//       }
+//       if (data.participantCount !== undefined) setParticipantCount(data.participantCount);
       
 //       const newUser: OnlineUser = {
 //         userId: data.userId,
@@ -1000,74 +561,32 @@
 //     });
 
 //     socket.on('user-left', (data) => {
-//       if (data.participantCount !== undefined) {
-//         setParticipantCount(data.participantCount);
-//       }
+//       if (data.participantCount !== undefined) setParticipantCount(data.participantCount);
       
 //       setOnlineUsers(prev => prev.filter(u => u.userId !== data.userId));
       
-//       // Remove all cursor decorations for this user
 //       setCursors(prev => {
 //         const newCursors = { ...prev };
 //         Object.keys(newCursors).forEach(key => {
-//           if (key.startsWith(data.userId)) {
-//             delete newCursors[key];
-//           }
+//           if (key.startsWith(data.userId)) delete newCursors[key];
 //         });
 //         return newCursors;
 //       });
       
-//       // Clean up cursor styles
 //       removeCursorStyles(data.userId);
 //     });
 
-//     // Enhanced cursor position handling
-//     socket.on('cursor-position', (data) => {
-//       console.log('👥 RECEIVED cursor position from:', data.userName, 'at line', data.position.lineNumber, 'col', data.position.column);
+//     socket.on('cursor-position', (data) => {      
+//       if (data.userId === user?.id) return;
       
-//       if (data.userId === user?.id) {
-//         console.log('⏭️ Ignoring own cursor position');
-//         return;
-//       }
+//       if (!data.position || typeof data.position.lineNumber !== 'number' || typeof data.position.column !== 'number') return;
       
-//       const cursorKey = `${data.userId}-${data.fileId}`;
 //       const userColor = getUserColor(data.userId);
+//       const validLine = Math.max(1, Math.floor(data.position.lineNumber));
+//       const validColumn = Math.max(1, Math.floor(data.position.column));
       
-//       // Update cursor state immediately
-//       setCursors(prev => {
-//         const newCursors = {
-//           ...prev,
-//           [cursorKey]: {
-//             userId: data.userId,
-//             userName: data.userName,
-//             fileId: data.fileId,
-//             position: data.position,
-//             selection: data.selection,
-//             color: userColor,
-//             timestamp: data.timestamp
-//           }
-//         };
-        
-//         console.log('🎯 Updated cursors state, total cursors:', Object.keys(newCursors).length);
-        
-//         return newCursors;
-//       });
-      
-//       // Apply decoration if it's for the active file
-//       if (data.fileId === activeFileId && editorRef.current && monacoRef.current) {
-//         console.log('🚀 Applying cursor decoration for active file');
-        
-//         setTimeout(() => {
-//           updateCursorDecorations({
-//             userId: data.userId,
-//             userName: data.userName,
-//             fileId: data.fileId,
-//             position: data.position,
-//             selection: data.selection,
-//             color: userColor,
-//             timestamp: data.timestamp
-//           }, userColor);
-//         }, 50);
+//       if (data.fileId === activeFileId) {
+//         updateCursorPosition(data.userId, data.userName, userColor, validLine, validColumn);
 //       }
 //     });
 
@@ -1087,9 +606,7 @@
 //         if (currentValue !== data.content) {
 //           const position = editorRef.current.getPosition();
 //           editorRef.current.setValue(data.content);
-//           if (position) {
-//             editorRef.current.setPosition(position);
-//           }
+//           if (position) editorRef.current.setPosition(position);
 //         }
 //       }
       
@@ -1123,15 +640,13 @@
 //       socket.off('chat-message');
 //       socket.off('session-ended');
 //     };
-//   }, [socket, connected, sessionId, user?.id, router, activeFileId, fetchSessionData, getUserColor, updateCursorDecorations, removeCursorStyles]);
+//   }, [socket, connected, sessionId, user?.id, router, activeFileId, fetchSessionData, getUserColor, updateCursorPosition, removeCursorStyles]);
 
-//   // Handle editor changes
+//   // Editor handlers
 //   const handleEditorChange = useCallback((value: string | undefined) => {
 //     if (!value || !socket || !connected || !activeFileId) return;
     
-//     if (isRemoteUpdateRef.current[activeFileId]) {
-//       return;
-//     }
+//     if (isRemoteUpdateRef.current[activeFileId]) return;
     
 //     setFiles(prev => prev.map(file => 
 //       file.id === activeFileId ? { ...file, content: value } : file
@@ -1159,12 +674,10 @@
 //     }
 //   }, [socket, connected, sessionId, activeFileId]);
 
-//   // FIXED editor mount that preserves input functionality
 //   const handleEditorDidMount = (editor: any, monaco: any) => {
 //     editorRef.current = editor;
 //     monacoRef.current = monaco;
     
-//     // Configure editor normally
 //     editor.updateOptions({
 //       fontSize: isMobile ? 13 : 15,
 //       fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
@@ -1180,8 +693,7 @@
 //       lineNumbers: isMobile ? 'off' : 'on',
 //       glyphMargin: !isMobile,
 //       folding: !isMobile,
-//       // IMPORTANT: Don't disable input features
-//       readOnly: false, // Ensure it's not read-only
+//       readOnly: false,
 //       renderValidationDecorations: 'on',
 //     });
 
@@ -1189,18 +701,25 @@
 //       editor.setValue(activeFile.content);
 //     }
 
-//     // GENTLE focus - don't force it aggressively
 //     setTimeout(() => {
 //       editor.focus();
 //     }, 100);
 
-//     // Cursor tracking (same as before)
-//     if (socket && connected && sessionId && user) {
+//     if (socket && connected && sessionId && user && activeFileId) {
+//       let lastCursorUpdate = 0;
+      
 //       editor.onDidChangeCursorPosition((e: any) => {
+//         const now = Date.now();
+        
+//         if (now - lastCursorUpdate < 100) return;
+//         lastCursorUpdate = now;
+        
 //         const position = e.position;
 //         const selection = editor.getSelection();
         
-//         socket.emit('cursor-position', {
+//         if (!position || typeof position.lineNumber !== 'number' || typeof position.column !== 'number' || position.lineNumber < 1 || position.column < 1) return;
+        
+//         const cursorData = {
 //           sessionId,
 //           fileId: activeFileId,
 //           userId: user.id,
@@ -1215,53 +734,27 @@
 //             endLineNumber: selection.endLineNumber,
 //             endColumn: selection.endColumn
 //           } : null,
-//           timestamp: Date.now()
-//         });
+//           timestamp: now
+//         };
+        
+//         socket.emit('cursor-position', cursorData);
 //       });
 //     }
 //   };
 
-//   // Update cursor decorations when cursors change or active file changes
-//   useEffect(() => {
-//     if (editorRef.current && activeFile && cursors) {
-//       // Clear all existing decorations
-//       Object.keys(decorationsRef.current).forEach(userId => {
-//         if (decorationsRef.current[userId]) {
-//           editorRef.current.deltaDecorations(decorationsRef.current[userId], []);
-//         }
-//       });
-//       decorationsRef.current = {};
-      
-//       // Apply decorations for current file
-//       Object.values(cursors).forEach(cursor => {
-//         if (cursor.fileId === activeFile.id && cursor.userId !== user?.id) {
-//           updateCursorDecorations(cursor, cursor.color);
-//         }
-//       });
-//     }
-//   }, [cursors, activeFile, user?.id, updateCursorDecorations]);
-
-//   // Fixed execute code function
+//   // Actions
 //   const executeCode = useCallback(async () => {
-//     if (!activeFile || isExecuting) {
-//       console.log('❌ Cannot execute: No active file or already executing');
-//       return;
-//     }
+//     if (!activeFile || isExecuting) return;
 
-//     console.log('🚀 Starting code execution for:', activeFile.name, activeFile.language);
 //     setIsExecuting(true);
 //     setExecutionResult(null);
     
 //     try {
 //       const startTime = performance.now();
       
-//       // Get the latest content from Monaco editor or fallback to file content
 //       let codeToExecute = activeFile.content;
 //       if (editorRef.current) {
 //         codeToExecute = editorRef.current.getValue();
-//         console.log('📝 Using content from Monaco editor, length:', codeToExecute.length);
-//       } else {
-//         console.log('📝 Using content from file state, length:', codeToExecute.length);
 //       }
 
 //       const token = localStorage.getItem('accessToken');
@@ -1269,7 +762,6 @@
 //         throw new Error('Authentication token not found');
 //       }
 
-//       console.log('📡 Sending execution request...');
 //       const response = await fetch('/api/execute', {
 //         method: 'POST',
 //         headers: {
@@ -1283,8 +775,6 @@
 //         })
 //       });
 
-//       console.log('📡 Response status:', response.status);
-
 //       if (!response.ok) {
 //         const errorData = await response.json().catch(() => ({}));
 //         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -1293,12 +783,6 @@
 //       const result = await response.json();
 //       const executionTime = Math.round(performance.now() - startTime);
 
-//       console.log('✅ Execution completed:', {
-//         hasOutput: !!result.output,
-//         hasError: !!result.error,
-//         executionTime
-//       });
-
 //       setExecutionResult({
 //         output: result.output || '',
 //         error: result.error || '',
@@ -1306,12 +790,9 @@
 //         language: activeFile.language
 //       });
 
-//       // Switch to output mode to show results
-//       switchMode('output');
+//       togglePanel('output');
 
 //     } catch (error) {
-//       console.error('❌ Execution error:', error);
-      
 //       setExecutionResult({
 //         output: '',
 //         error: error instanceof Error ? error.message : 'Unknown execution error',
@@ -1319,14 +800,12 @@
 //         language: activeFile.language
 //       });
 
-//       // Still switch to output mode to show the error
-//       switchMode('output');
+//       togglePanel('output');
 //     } finally {
 //       setIsExecuting(false);
 //     }
-//   }, [activeFile, isExecuting, sessionId, switchMode]);
+//   }, [activeFile, isExecuting, sessionId, togglePanel]);
 
-//   // Create new file
 //   const createNewFile = async () => {
 //     if (!newFileName.trim() || !socket || !connected) return;
     
@@ -1381,7 +860,6 @@
 //     }
 //   };
 
-//   // Delete file
 //   const deleteFile = async (fileId: string) => {
 //     if (!isHost) return;
     
@@ -1418,7 +896,6 @@
 //     }
 //   };
 
-//   // Save all files
 //   const saveAllFiles = async () => {
 //     try {
 //       if (activeFileId && editorRef.current) {
@@ -1428,7 +905,7 @@
 //         );
         
 //         const token = localStorage.getItem('accessToken');
-//         const response = await fetch(`/api/sessions/${sessionId}/save`, {
+//         await fetch(`/api/sessions/${sessionId}/save`, {
 //           method: 'POST',
 //           headers: {
 //             'Content-Type': 'application/json',
@@ -1442,7 +919,7 @@
 //     }
 //   };
 
-//   // Send chat message
+//   // Chat handlers
 //   const sendMessage = useCallback(() => {
 //     if (!newMessage.trim() || !socket || !connected || isSendingMessage) return;
 
@@ -1462,7 +939,6 @@
 //     }, 5000);
 //   }, [newMessage, socket, connected, sessionId, isSendingMessage]);
 
-//   // Handle enter key in chat
 //   const handleChatKeyPress = (e: React.KeyboardEvent) => {
 //     if (e.key === 'Enter' && !e.shiftKey) {
 //       e.preventDefault();
@@ -1470,7 +946,7 @@
 //     }
 //   };
 
-//   // Remove participant
+//   // Participant management
 //   const removeParticipant = useCallback((participantId: string) => {
 //     if (!isHost || !socket || !connected) return;
     
@@ -1482,13 +958,12 @@
 //     setShowParticipantMenu(null);
 //   }, [isHost, socket, connected, sessionId]);
 
-//   // Copy session link
+//   // Session actions
 //   const copySessionLink = () => {
 //     const link = `${window.location.origin}/session/${sessionId}`;
 //     navigator.clipboard.writeText(link);
 //   };
 
-//   // Export session
 //   const exportSession = async () => {
 //     if (!session) return;
 
@@ -1532,7 +1007,6 @@
 //     URL.revokeObjectURL(url);
 //   };
 
-//   // Generate preview HTML
 //   const generatePreview = () => {
 //     const htmlFile = files.find(f => f.language === 'html');
 //     const cssFile = files.find(f => f.language === 'css');
@@ -1572,7 +1046,6 @@
 // </html>`;
 //   };
 
-//   // End session
 //   const handleEndSession = async () => {
 //     if (!isHost || !session) return;
 
@@ -1613,269 +1086,172 @@
 //     }
 //   };
 
-//   // Modern Quick Actions Bar Component
+//   // Quick Actions Bar Component
 //   const QuickActionsBar = () => (
-//     <div className="flex items-center justify-between p-3 bg-slate-900/95 border-b border-slate-700/50 backdrop-blur-xl">
-//       <div className="flex items-center space-x-3">
-//         {/* Layout Mode Selector */}
-//         <div className="flex items-center space-x-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 backdrop-blur-sm">
-//           <Button
-//             size="sm"
-//             variant={layout.mode === 'focus' ? 'default' : 'ghost'}
-//             onClick={() => switchMode('focus')}
-//             className={cn(
-//               "h-8 px-3 rounded-lg transition-all duration-200",
-//               layout.mode === 'focus' 
-//                 ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" 
-//                 : "hover:bg-slate-700/50 text-slate-300"
-//             )}
-//             title="Focus Mode (Escape)"
-//           >
-//             <Layout className="h-3 w-3 mr-1" />
-//             <span className="hidden sm:inline">Focus</span>
-//           </Button>
-
-//           <Button
-//             size="sm"
-//             variant={layout.participants === 'expanded' ? 'default' : 'ghost'}
-//             onClick={() => togglePanel('participants')}
-//             className={cn(
-//               "h-8 px-3 rounded-lg relative transition-all duration-200",
-//               layout.participants === 'expanded'
-//                 ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
-//                 : "hover:bg-slate-700/50 text-slate-300"
-//             )}
-//             title="Participants"
-//           >
-//             <Users className="h-3 w-3 mr-1" />
-//             <span className="hidden sm:inline">People</span>
-//             {participantCount > 1 && (
-//               <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 text-xs flex items-center justify-center bg-emerald-600 border-0 shadow-lg shadow-emerald-600/25">
-//                 {participantCount}
-//               </Badge>
-//             )}
-//           </Button>
-
-//           <Button
-//             size="sm"
-//             variant={layout.chat === 'expanded' ? 'default' : 'ghost'}
-//             onClick={() => togglePanel('chat')}
-//             className={cn(
-//               "h-8 px-3 rounded-lg relative transition-all duration-200",
-//               layout.chat === 'expanded'
-//                 ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25"
-//                 : "hover:bg-slate-700/50 text-slate-300"
-//             )}
-//             title="Chat"
-//           >
-//             <MessageSquare className="h-3 w-3 mr-1" />
-//             <span className="hidden sm:inline">Chat</span>
-//             {messages.length > 0 && layout.chat !== 'expanded' && (
-//               <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50" />
-//             )}
-//           </Button>
-
-//           <Button
-//             size="sm"
-//             variant={layout.preview === 'expanded' ? 'default' : 'ghost'}
-//             onClick={() => togglePanel('preview')}
-//             className={cn(
-//               "h-8 px-3 rounded-lg transition-all duration-200",
-//               layout.preview === 'expanded'
-//                 ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25"
-//                 : "hover:bg-slate-700/50 text-slate-300"
-//             )}
-//             title="Preview Mode"
-//           >
-//             <Eye className="h-3 w-3 mr-1" />
-//             <span className="hidden sm:inline">Preview</span>
-//           </Button>
-
-//           <Button
-//             size="sm"
-//             variant={layout.output === 'expanded' ? 'default' : 'ghost'}
-//             onClick={() => togglePanel('output')}
-//             className={cn(
-//               "h-8 px-3 rounded-lg transition-all duration-200",
-//               layout.output === 'expanded'
-//                 ? "bg-orange-600 text-white shadow-lg shadow-orange-600/25"
-//                 : "hover:bg-slate-700/50 text-slate-300"
-//             )}
-//             title="Output Mode"
-//           >
-//             <Terminal className="h-3 w-3 mr-1" />
-//             <span className="hidden sm:inline">Output</span>
-//           </Button>
-//         </div>
-
-//         {/* File Actions */}
-//         <div className="flex items-center space-x-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 backdrop-blur-sm">
-//           <Button
-//             size="sm"
-//             variant="ghost"
-//             onClick={saveAllFiles}
-//             className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200"
-//             title="Save All (Ctrl+S)"
-//           >
-//             <Save className="h-3 w-3" />
-//           </Button>
-
-//           {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
-//             <Button
-//               size="sm"
-//               variant="ghost"
-//               onClick={executeCode}
-//               disabled={isExecuting}
-//               className={cn(
-//                 "h-8 px-3 rounded-lg transition-all duration-200",
-//                 isExecuting 
-//                   ? "text-emerald-400 bg-emerald-500/10" 
-//                   : "hover:bg-emerald-500/10 hover:text-emerald-400 text-slate-300"
-//               )}
-//               title="Run Code (Ctrl+E)"
-//             >
-//               {isExecuting ? (
-//                 <Loader2 className="h-3 w-3 animate-spin" />
-//               ) : (
-//                 <Play className="h-3 w-3" />
-//               )}
-//             </Button>
+//     <div className="flex items-center justify-between h-8 px-3 border-b border-slate-800/50 bg-slate-900/30">
+//       {/* Left Section */}
+//       <div className="flex items-center space-x-0.5">
+//         <button
+//           onClick={() => setSidebarMode(layout.sidebar === 'participants' ? 'hidden' : 'participants')}
+//           className={cn(
+//             "h-6 px-2 text-xs rounded flex items-center gap-1.5 transition-colors relative",
+//             layout.sidebar === 'participants'
+//               ? "bg-slate-600/80 text-slate-100"
+//               : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
 //           )}
-
-//           {isHost && (
-//             <Button
-//               size="sm"
-//               variant="ghost"
-//               onClick={() => setShowNewFileModal(true)}
-//               className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200"
-//               title="New File (Ctrl+N)"
-//             >
-//               <Plus className="h-3 w-3" />
-//             </Button>
+//           title="Participants"
+//         >
+//           <Users className="h-3 w-3" />
+//           <span className="hidden sm:inline">People</span>
+//           {participantCount > 1 && (
+//             <span className="absolute -top-0.5 -right-0.5 bg-blue-500 text-white text-[9px] rounded-full h-3 w-3 flex items-center justify-center font-medium">
+//               {participantCount}
+//             </span>
 //           )}
-//         </div>
+//         </button>
+
+//         <button
+//           onClick={() => setSidebarMode(layout.sidebar === 'chat' ? 'hidden' : 'chat')}
+//           className={cn(
+//             "h-6 px-2 text-xs rounded flex items-center gap-1.5 transition-colors relative",
+//             layout.sidebar === 'chat'
+//               ? "bg-slate-600/80 text-slate-100"
+//               : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+//           )}
+//           title="Chat"
+//         >
+//           <MessageSquare className="h-3 w-3" />
+//           <span className="hidden sm:inline">Chat</span>
+//           {messages.length > 0 && layout.sidebar !== 'chat' && (
+//             <div className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 bg-blue-400 rounded-full" />
+//           )}
+//         </button>
+
+//         <div className="w-px h-4 bg-slate-700/50 mx-1" />
+
+//         <button
+//           onClick={() => togglePanel('preview')}
+//           className={cn(
+//             "h-6 px-2 text-xs rounded flex items-center gap-1.5 transition-colors",
+//             layout.preview === 'expanded'
+//               ? "bg-slate-600/80 text-slate-100"
+//               : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+//           )}
+//           title="Preview"
+//         >
+//           <Eye className="h-3 w-3" />
+//           <span className="hidden md:inline">Preview</span>
+//         </button>
+
+//         <button
+//           onClick={() => togglePanel('output')}
+//           className={cn(
+//             "h-6 px-2 text-xs rounded flex items-center gap-1.5 transition-colors",
+//             layout.output === 'expanded'
+//               ? "bg-slate-600/80 text-slate-100"
+//               : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+//           )}
+//           title="Output"
+//         >
+//           <Terminal className="h-3 w-3" />
+//           <span className="hidden md:inline">Output</span>
+//         </button>
 //       </div>
 
-//       {/* Session Actions */}
-//       <div className="flex items-center space-x-2">
-//         <div className="flex items-center space-x-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 backdrop-blur-sm">
-//           <Button
-//             size="sm"
-//             variant="ghost"
-//             onClick={copySessionLink}
-//             className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200"
-//             title="Share Link"
+//       {/* Right Section */}
+//       <div className="flex items-center space-x-1">
+//         {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
+//           <button
+//             onClick={executeCode}
+//             disabled={isExecuting}
+//             className={cn(
+//               "h-6 px-2 text-xs rounded flex items-center gap-1.5 transition-colors",
+//               isExecuting
+//                 ? "bg-blue-500/20 text-blue-400 cursor-not-allowed"
+//                 : "bg-blue-600/90 hover:bg-blue-600 text-white"
+//             )}
+//             title="Run Code (Ctrl+E)"
 //           >
-//             <Share2 className="h-3 w-3" />
-//           </Button>
+//             {isExecuting ? (
+//               <Loader2 className="h-3 w-3 animate-spin" />
+//             ) : (
+//               <Play className="h-3 w-3" />
+//             )}
+//             <span className="hidden sm:inline text-xs">Run</span>
+//           </button>
+//         )}
 
-//           <Button
-//             size="sm"
-//             variant="ghost"
-//             onClick={exportSession}
-//             className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200"
-//             title="Export Session"
+//         {isHost && (
+//           <button
+//             onClick={() => setShowNewFileModal(true)}
+//             className="h-6 px-2 text-xs rounded flex items-center gap-1.5 transition-colors text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+//             title="New File (Ctrl+N)"
 //           >
-//             <Download className="h-3 w-3" />
-//           </Button>
-
-//           {isHost && (
-//             <>
-//               <Button
-//                 size="sm"
-//                 variant="ghost"
-//                 onClick={() => setShowInviteModal(true)}
-//                 className="h-8 px-3 rounded-lg hover:bg-blue-500/10 hover:text-blue-400 text-slate-300 transition-all duration-200"
-//                 title="Invite Users"
-//               >
-//                 <UserPlus className="h-3 w-3" />
-//               </Button>
-
-//               <Button
-//                 size="sm"
-//                 variant="ghost"
-//                 onClick={() => setShowEndSessionModal(true)}
-//                 disabled={endSessionLoading}
-//                 className="h-8 px-3 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-slate-300 transition-all duration-200"
-//                 title="End Session"
-//               >
-//                 {endSessionLoading ? (
-//                   <Loader2 className="h-3 w-3 animate-spin" />
-//                 ) : (
-//                   <StopCircle className="h-3 w-3" />
-//                 )}
-//               </Button>
-//             </>
-//           )}
-//         </div>
+//             <Plus className="h-3 w-3" />
+//             <span className="hidden sm:inline">New</span>
+//           </button>
+//         )}
 //       </div>
 //     </div>
 //   );
 
-//   // Cleanup on unmount
+//   // Cleanup
 //   useEffect(() => {
 //     return () => {
 //       if (socket && sessionId) {
 //         socket.emit('leave-session', sessionId);
 //       }
       
-//       // Clear all timeouts
 //       Object.values(syncTimeoutRef.current).forEach(timeout => {
 //         if (timeout) clearTimeout(timeout);
 //       });
       
-//       // Remove all cursor styles
 //       Object.keys(cursors).forEach(cursorKey => {
 //         const userId = cursorKey.split('-')[0];
 //         removeCursorStyles(userId);
 //       });
-      
-//       // Clear decorations
-//       decorationsRef.current = {};
 //     };
 //   }, [socket, sessionId, cursors, removeCursorStyles]);
 
 //   // Loading states
 //   if (!user) {
 //     return (
-//       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-//         <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
+//       <div className="min-h-screen bg-background flex items-center justify-center">
+//         <Card className="p-8 max-w-md mx-4 bg-card/95 border-card border-2 backdrop-blur-xl rounded-lg">
 //           <div className="text-center space-y-6">
-            
+//             <div className="p-4 bg-blue-500/20 rounded-full w-fit mx-auto">
+//               <Lock className="h-16 w-16 text-blue-400" />
+//             </div>
 //             <div>
-//               <h2 className="text-2xl font-bold text-slate-100 mb-2">Authentication Required</h2>
-//               <p className="text-slate-400 mb-4">Please log in to access this collaboration session.</p>
-//               <Button 
-//                 onClick={() => router.push('/auth/login')}
-//                 className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25"
-//               >
+//               <h2 className="text-2xl font-bold text-card-foreground mb-2">Authentication Required</h2>
+//               <p className="text-muted-foreground mb-4">Please log in to access this collaboration session.</p>
+//               <Button onClick={() => router.push('/auth/login')} className="bg-primary hover:bg-primary-foreground shadow-lg shadow-primary/25 rounded-md">
 //                 Sign In
 //               </Button>
 //             </div>
 //           </div>
 //         </Card>
 //       </div>
+
 //     );
 //   }
 
 //   if (loading || connecting) {
 //     return (
-//       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-//         <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
-//           <div className="text-center space-y-6">
-           
-//             <div className="space-y-4">
-//               <Loader2 className="h-12 w-12 mx-auto animate-spin text-blue-400" />
-//               <div>
-//                 <h2 className="text-xl font-bold text-slate-100 mb-2">Joining Session</h2>
-//                 <p className="text-slate-400">
-//                   {loading ? 'Loading session data...' : 'Establishing connection...'}
-//                 </p>
-//               </div>
-//             </div>
-//           </div>
-//         </Card>
+//       <div className="min-h-screen bg-background flex items-center justify-center">
+//   <Card className="p-8 max-w-md mx-4 bg-card/95 border-card border-2 backdrop-blur-xl rounded-lg">
+//     <div className="text-center space-y-6">
+//       <div className="p-4 bg-blue-500/20 rounded-full w-fit mx-auto">
+//         <Loader2 className="h-16 w-16 animate-spin text-blue-400" />
 //       </div>
+//       <div>
+//         <h2 className="text-xl font-bold text-card-foreground mb-2">Joining Session</h2>
+//         <p className="text-muted-foreground">{loading ? 'Loading session data...' : 'Establishing connection...'}</p>
+//       </div>
+//     </div>
+//   </Card>
+// </div>
+
 //     );
 //   }
 
@@ -1911,13 +1287,12 @@
 //       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
 //         <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
 //           <div className="text-center space-y-6">
-           
-//             <div className="space-y-4">
-//               <Loader2 className="h-12 w-12 mx-auto animate-spin text-blue-400" />
-//               <div>
-//                 <h2 className="text-xl font-bold text-slate-100 mb-2">Joining Session</h2>
-//                 <p className="text-slate-400">Setting up your collaborative workspace...</p>
-//               </div>
+//             <div className="p-4 bg-emerald-500/20 rounded-full w-fit mx-auto">
+//               <Loader2 className="h-16 w-16 animate-spin text-emerald-400" />
+//             </div>
+//             <div>
+//               <h2 className="text-xl font-bold text-slate-100 mb-2">Joining Session</h2>
+//               <p className="text-slate-400">Setting up your collaborative workspace...</p>
 //             </div>
 //           </div>
 //         </Card>
@@ -1925,10 +1300,8 @@
 //     );
 //   }
 
-//   // Main session interface with modern styling
 //   return (
 //     <div className="h-screen flex flex-col bg-slate-950 overflow-hidden">
-//       {/* Modern Session Header */}
 //       <SessionHeader 
 //         session={session}
 //         isHost={isHost}
@@ -1945,50 +1318,15 @@
 //         endSessionLoading={endSessionLoading}
 //       />
 
-//       {/* Modern Quick Actions Bar */}
 //       <QuickActionsBar />
 
-//       {/* Main Content Area with Modern Layout */}
 //       <div className="flex-1 flex overflow-hidden">
-//         {/* Separate Chat Panel */}
-//         {layout.chat === 'expanded' && (
+//         {/* Single Sidebar - only shows one mode at a time */}
+//         {layout.sidebar !== 'hidden' && (
 //           <>
-//             <div 
-//               className="flex-shrink-0 transition-all duration-300 ease-out"
-//               style={{ width: `${sidebarPanel.width}px` }}
-//             >
-//               <ChatPanel
-//                 user={user}
-//                 messages={messages}
-//                 newMessage={newMessage}
-//                 setNewMessage={setNewMessage}
-//                 chatError={chatError}
-//                 connected={connected}
-//                 isSendingMessage={isSendingMessage}
-//                 sendMessage={sendMessage}
-//                 handleChatKeyPress={handleChatKeyPress}
-//                 messagesEndRef={messagesEndRef}
-//                 getUserColor={getUserColor}
-//                 onClose={() => togglePanel('chat')}
-//               />
-//             </div>
-//             <div 
-//               className="w-1 bg-slate-700/50 hover:bg-emerald-500/50 cursor-col-resize transition-all duration-200 relative group"
-//               onMouseDown={sidebarPanel.startResize}
-//             >
-//               <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-emerald-500/10" />
-//             </div>
-//           </>
-//         )}
-
-//         {/* Separate Participants Panel */}
-//         {layout.participants === 'expanded' && (
-//           <>
-//             <div 
-//               className="flex-shrink-0 transition-all duration-300 ease-out"
-//               style={{ width: `${sidebarPanel.width}px` }}
-//             >
-//               <ParticipantsPanel
+//             <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${sidebarPanel.width}px` }}>
+//               <Sidebar
+//                 mode={layout.sidebar}
 //                 user={user}
 //                 session={session}
 //                 isHost={isHost}
@@ -1998,21 +1336,28 @@
 //                 showParticipantMenu={showParticipantMenu}
 //                 setShowParticipantMenu={setShowParticipantMenu}
 //                 removeParticipant={removeParticipant}
-//                 onClose={() => togglePanel('participants')}
+//                 messages={messages}
+//                 newMessage={newMessage}
+//                 setNewMessage={setNewMessage}
+//                 chatError={chatError}
+//                 connected={connected}
+//                 isSendingMessage={isSendingMessage}
+//                 sendMessage={sendMessage}
+//                 handleChatKeyPress={handleChatKeyPress}
+//                 messagesEndRef={messagesEndRef}
+//                 isMobile={isMobile}
+//                 onInviteUsers={() => setShowInviteModal(true)}
+//                 onClose={() => setSidebarMode('hidden')}
+//                 className="h-full"
 //               />
 //             </div>
-//             <div 
-//               className="w-1 bg-slate-700/50 hover:bg-blue-500/50 cursor-col-resize transition-all duration-200 relative group"
-//               onMouseDown={sidebarPanel.startResize}
-//             >
-//               <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-blue-500/10" />
+//             <div className="w-1 bg-slate-700/50 hover:bg-slate-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={sidebarPanel.startResize}>
+//               <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-slate-500/10" />
 //             </div>
 //           </>
 //         )}
 
-//         {/* Main Editor Area */}
 //         <div className="flex-1 flex flex-col min-w-0">
-//           {/* Modern File Tabs */}
 //           <FileTabs
 //             files={files}
 //             activeFileId={activeFileId}
@@ -2026,13 +1371,8 @@
 //             activeFile={activeFile}
 //           />
 
-//           {/* Editor and Panels Container */}
 //           <div className="flex-1 flex overflow-hidden">
-//             {/* Code Editor */}
-//             <div className={cn(
-//               "flex-1 min-w-0",
-//               (layout.preview === 'expanded' || layout.output === 'expanded') && !isMobile && "border-r border-slate-700/50"
-//             )}>
+//             <div className={cn("flex-1 min-w-0", (layout.preview === 'expanded' || layout.output === 'expanded') && !isMobile && "border-r border-slate-700/50")}>
 //               <EditorArea
 //                 activeFile={activeFile}
 //                 handleEditorChange={handleEditorChange}
@@ -2059,42 +1399,30 @@
 //             {/* Preview Panel */}
 //             {layout.preview === 'expanded' && (
 //               <>
-//                 <div 
-//                   className="w-1 bg-slate-700/50 hover:bg-purple-500/50 cursor-col-resize transition-all duration-200 relative group"
-//                   onMouseDown={outputPanel.startResize}
-//                 >
+//                 <div className="w-1 bg-slate-700/50 hover:bg-purple-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={outputPanel.startResize}>
 //                   <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-purple-500/10" />
 //                 </div>
-//                 <div 
-//                   className="flex-shrink-0 transition-all duration-300 ease-out"
-//                   style={{ width: `${outputPanel.width}px` }}
-//                 >
+//                 <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${outputPanel.width}px` }}>
 //                   <PreviewPanel
 //                     isPreviewVisible={true}
 //                     setIsPreviewVisible={() => togglePanel('preview')}
 //                     generatePreview={generatePreview}
 //                     session={session}
 //                     activeFile={activeFile}
+//                     files={files}
 //                   />
 //                 </div>
 //               </>
 //             )}
 
-//             {/* Enhanced Output Panel */}
+//             {/* Output Panel */}
 //             {layout.output === 'expanded' && (
 //               <>
-//                 <div 
-//                   className="w-1 bg-slate-700/50 hover:bg-orange-500/50 cursor-col-resize transition-all duration-200 relative group"
-//                   onMouseDown={outputPanel.startResize}
-//                 >
+//                 <div className="w-1 bg-slate-700/50 hover:bg-orange-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={outputPanel.startResize}>
 //                   <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-orange-500/10" />
 //                 </div>
-//                 <div 
-//                   className="flex-shrink-0 transition-all duration-300 ease-out bg-slate-900/95 border-l border-slate-700/50 backdrop-blur-xl"
-//                   style={{ width: `${outputPanel.width}px` }}
-//                 >
+//                 <div className="flex-shrink-0 transition-all duration-300 ease-out bg-slate-900/95 border-l border-slate-700/50 backdrop-blur-xl" style={{ width: `${outputPanel.width}px` }}>
 //                   <div className="h-full flex flex-col">
-//                     {/* Enhanced Output Header */}
 //                     <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
 //                       <div className="flex items-center justify-between">
 //                         <div className="flex items-center space-x-3">
@@ -2103,41 +1431,21 @@
 //                           </div>
 //                           <div>
 //                             <h3 className="text-sm font-semibold text-slate-100">Code Output</h3>
-//                             <p className="text-xs text-slate-400">
-//                               {activeFile ? `${activeFile.language} execution` : 'No active file'}
-//                             </p>
+//                             <p className="text-xs text-slate-400">{activeFile ? `${activeFile.language} execution` : 'No active file'}</p>
 //                           </div>
 //                         </div>
 //                         <div className="flex items-center space-x-2">
-//                           <Button 
-//                             size="sm" 
-//                             variant="outline" 
-//                             onClick={executeCode}
-//                             disabled={isExecuting || !activeFile}
-//                             className="hover:bg-orange-500/10 hover:text-orange-400 border-slate-700/50 transition-all duration-200"
-//                             title="Re-run code"
-//                           >
-//                             {isExecuting ? (
-//                               <Loader2 className="h-3 w-3 animate-spin" />
-//                             ) : (
-//                               <RefreshCw className="h-3 w-3" />
-//                             )}
+//                           <Button size="sm" variant="outline" onClick={executeCode} disabled={isExecuting || !activeFile} className="hover:bg-orange-500/10 hover:text-orange-400 border-slate-700/50 transition-all duration-200" title="Re-run code">
+//                             {isExecuting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
 //                           </Button>
                           
-//                           <Button 
-//                             size="sm" 
-//                             variant="ghost" 
-//                             onClick={() => switchMode('focus')}
-//                             className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
-//                             title="Close Output"
-//                           >
+//                           <Button size="sm" variant="ghost" onClick={() => togglePanel('output')} className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200" title="Close Output">
 //                             <X className="h-4 w-4" />
 //                           </Button>
 //                         </div>
 //                       </div>
 //                     </div>
                     
-//                     {/* Enhanced Output Content */}
 //                     <div className="flex-1 p-4 overflow-auto min-h-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
 //                       {isExecuting ? (
 //                         <div className="flex items-center justify-center h-full min-h-[200px]">
@@ -2147,65 +1455,37 @@
 //                             </div>
 //                             <div>
 //                               <p className="font-semibold text-slate-100">Executing Code</p>
-//                               <p className="text-sm text-slate-400">
-//                                 Running {activeFile?.language} code...
-//                               </p>
+//                               <p className="text-sm text-slate-400">Running {activeFile?.language} code...</p>
 //                             </div>
 //                           </div>
 //                         </div>
 //                       ) : executionResult ? (
 //                         <div className="space-y-4">
-//                           {/* Enhanced Execution Status */}
-//                           <div className={cn(
-//                             "px-4 py-3 rounded-xl text-sm border backdrop-blur-sm",
-//                             executionResult.error 
-//                               ? "bg-red-500/10 text-red-400 border-red-500/30"
-//                               : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-//                           )}>
+//                           <div className={cn("px-4 py-3 rounded-xl text-sm border backdrop-blur-sm", executionResult.error ? "bg-red-500/10 text-red-400 border-red-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30")}>
 //                             <div className="flex items-center gap-3">
-//                               {executionResult.error ? (
-//                                 <AlertCircle className="h-5 w-5 flex-shrink-0" />
-//                               ) : (
-//                                 <CheckCircle className="h-5 w-5 flex-shrink-0" />
-//                               )}
+//                               {executionResult.error ? <AlertCircle className="h-5 w-5 flex-shrink-0" /> : <CheckCircle className="h-5 w-5 flex-shrink-0" />}
 //                               <div className="flex-1">
-//                                 <div className="font-semibold">
-//                                   {executionResult.error ? "Execution Failed" : "Execution Successful"}
-//                                 </div>
-//                                 <div className="text-xs opacity-80 mt-1">
-//                                   Completed in {executionResult.executionTime}ms
-//                                 </div>
+//                                 <div className="font-semibold">{executionResult.error ? "Execution Failed" : "Execution Successful"}</div>
+//                                 <div className="text-xs opacity-80 mt-1">Completed in {executionResult.executionTime}ms</div>
 //                               </div>
 //                             </div>
 //                           </div>
                           
-//                           {/* Enhanced Output Display */}
 //                           <div className="space-y-3">
 //                             <div className="flex items-center justify-between">
 //                               <h4 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
 //                                 <Zap className="h-4 w-4" />
 //                                 {executionResult.error ? "Error Details:" : "Program Output:"}
 //                               </h4>
-//                               <Button
-//                                 size="sm"
-//                                 variant="outline"
-//                                 onClick={() => {
-//                                   const content = executionResult.error || executionResult.output || '';
-//                                   navigator.clipboard.writeText(content);
-//                                 }}
-//                                 className="h-7 px-3 text-xs hover:bg-slate-700/50 border-slate-700/50 transition-all duration-200"
-//                               >
-//                                 <Copy className="h-3 w-3 mr-1" />
-//                                 Copy
+//                               <Button size="sm" variant="outline" onClick={() => {
+//                                 const content = executionResult.error || executionResult.output || '';
+//                                 navigator.clipboard.writeText(content);
+//                               }} className="h-7 px-3 text-xs hover:bg-slate-700/50 border-slate-700/50 transition-all duration-200">
+//                                 <Copy className="h-3 w-3 mr-1" />Copy
 //                               </Button>
 //                             </div>
                             
-//                             <pre className={cn(
-//                               "text-sm whitespace-pre-wrap font-mono p-4 rounded-xl border overflow-auto max-h-96 backdrop-blur-sm",
-//                               executionResult.error 
-//                                 ? "bg-red-500/5 border-red-500/20 text-red-300"
-//                                 : "bg-slate-800/50 border-slate-700/30 text-slate-200"
-//                             )}>
+//                             <pre className={cn("text-sm whitespace-pre-wrap font-mono p-4 rounded-xl border overflow-auto max-h-96 backdrop-blur-sm", executionResult.error ? "bg-red-500/5 border-red-500/20 text-red-300" : "bg-slate-800/50 border-slate-700/30 text-slate-200")}>
 //                               {executionResult.error || executionResult.output || 'No output generated'}
 //                             </pre>
 //                           </div>
@@ -2218,17 +1498,10 @@
 //                             </div>
 //                             <div>
 //                               <h3 className="font-semibold text-slate-100 mb-2 text-lg">Ready to Execute</h3>
-//                               <p className="text-sm text-slate-400 mb-6 max-w-xs">
-//                                 Click the "Run Code" button or press Ctrl+E to execute your code
-//                               </p>
+//                               <p className="text-sm text-slate-400 mb-6 max-w-xs">Click the "Run Code" button or press Ctrl+E to execute your code</p>
 //                               {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
-//                                 <Button
-//                                   onClick={executeCode}
-//                                   disabled={isExecuting}
-//                                   className="bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-600/25"
-//                                 >
-//                                   <Play className="h-4 w-4 mr-2" />
-//                                   Run Code
+//                                 <Button onClick={executeCode} disabled={isExecuting} className="bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-600/25">
+//                                   <Play className="h-4 w-4 mr-2" />Run Code
 //                                 </Button>
 //                               )}
 //                             </div>
@@ -2244,81 +1517,45 @@
 //         </div>
 //       </div>
 
-//       {/* Enhanced Mobile Quick Actions */}
+//       {/* Mobile floating buttons */}
 //       {isMobile && (
 //         <div className="fixed bottom-4 right-4 flex flex-col space-y-3 z-40">
-//           <Button
-//             onClick={() => togglePanel('participants')}
-//             className={cn(
-//               "rounded-full shadow-xl backdrop-blur-xl transition-all duration-300 border-0",
-//               layout.participants === 'expanded' 
-//                 ? "bg-blue-600 text-white shadow-blue-600/40" 
-//                 : "bg-slate-800/90 border border-slate-700/50 text-slate-300 hover:bg-slate-700/90"
-//             )}
-//           >
-//             <Users className="h-4 w-4 mr-2" />
-//             People
+//           <Button onClick={() => setSidebarMode(layout.sidebar === 'participants' ? 'hidden' : 'participants')} className={cn("rounded-full shadow-xl backdrop-blur-xl transition-all duration-300 border-0", layout.sidebar === 'participants' ? "bg-blue-600 text-white shadow-blue-600/40" : "bg-slate-800/90 border border-slate-700/50 text-slate-300 hover:bg-slate-700/90")}>
+//             <Users className="h-4 w-4 mr-2" />People
 //             {participantCount > 1 && (
-//               <Badge className="ml-2 bg-emerald-600 text-white text-xs border-0 shadow-lg shadow-emerald-600/25">
-//                 {participantCount}
-//               </Badge>
+//               <Badge className="ml-2 bg-blue-500 text-white text-xs border-0 shadow-lg shadow-blue-500/25">{participantCount}</Badge>
 //             )}
 //           </Button>
 
-//           <Button
-//             onClick={() => togglePanel('chat')}
-//             className={cn(
-//               "rounded-full shadow-xl backdrop-blur-xl transition-all duration-300 border-0",
-//               layout.chat === 'expanded' 
-//                 ? "bg-emerald-600 text-white shadow-emerald-600/40" 
-//                 : "bg-slate-800/90 border border-slate-700/50 text-slate-300 hover:bg-slate-700/90"
-//             )}
-//           >
-//             <MessageSquare className="h-4 w-4 mr-2" />
-//             Chat
-//             {messages.length > 0 && layout.chat !== 'expanded' && (
-//               <Badge className="ml-2 bg-emerald-600 text-white text-xs border-0 shadow-lg shadow-emerald-600/25">
-//                 {messages.length}
-//               </Badge>
+//           <Button onClick={() => setSidebarMode(layout.sidebar === 'chat' ? 'hidden' : 'chat')} className={cn("rounded-full shadow-xl backdrop-blur-xl transition-all duration-300 border-0", layout.sidebar === 'chat' ? "bg-blue-600 text-white shadow-blue-600/40" : "bg-slate-800/90 border border-slate-700/50 text-slate-300 hover:bg-slate-700/90")}>
+//             <MessageSquare className="h-4 w-4 mr-2" />Chat
+//             {messages.length > 0 && layout.sidebar !== 'chat' && (
+//               <Badge className="ml-2 bg-blue-500 text-white text-xs border-0 shadow-lg shadow-blue-500/25">{messages.length}</Badge>
 //             )}
 //           </Button>
           
 //           {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
-//             <Button
-//               onClick={executeCode}
-//               disabled={isExecuting}
-//               className="rounded-full bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/40 backdrop-blur-xl border-0"
-//             >
-//               {isExecuting ? (
-//                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-//               ) : (
-//                 <Play className="h-4 w-4 mr-2" />
-//               )}
-//               Run
+//             <Button onClick={executeCode} disabled={isExecuting} className="rounded-full bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/40 backdrop-blur-xl border-0">
+//               {isExecuting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}Run
 //             </Button>
 //           )}
 //         </div>
 //       )}
 
-//       {/* Modern Status Bar */}
+//       {/* Status bar */}
 //       <div className="bg-slate-900/95 border-t border-slate-700/50 px-4 py-2 flex items-center justify-between text-xs text-slate-400 backdrop-blur-xl">
 //         <div className="flex items-center space-x-4">
 //           <div className="flex items-center space-x-2">
 //             <Badge variant="outline" className="text-xs border-slate-700/50 bg-slate-800/50">
 //               {activeFile ? languageConfigs[activeFile.language as keyof typeof languageConfigs]?.name || activeFile.language : 'No file'}
 //             </Badge>
-//             {activeFile && (
-//               <span className="text-slate-500">{activeFile.content.split('\n').length} lines</span>
-//             )}
+//             {activeFile && <span className="text-slate-500">{activeFile.content.split('\n').length} lines</span>}
 //           </div>
 //         </div>
 
 //         <div className="flex items-center space-x-4">
 //           <div className="flex items-center space-x-2">
-//             <div className={cn(
-//               "w-2 h-2 rounded-full",
-//               connected ? "bg-emerald-400 shadow-lg shadow-emerald-400/50" : "bg-red-400"
-//             )} />
+//             <div className={cn("w-2 h-2 rounded-full", connected ? "bg-emerald-400 shadow-lg shadow-emerald-400/50" : "bg-red-400")} />
 //             <span>{participantCount} online</span>
 //           </div>
           
@@ -2327,13 +1564,7 @@
 //             <span>{files.length} files</span>
 //           </div>
 
-//           <Badge className={cn(
-//             "text-xs border-0 shadow-sm",
-//             syncStatus === 'synced' && "bg-emerald-500/10 text-emerald-400",
-//             syncStatus === 'syncing' && "bg-blue-500/10 text-blue-400",
-//             syncStatus === 'error' && "bg-red-500/10 text-red-400",
-//             syncStatus === 'offline' && "bg-slate-700 text-slate-400"
-//           )}>
+//           <Badge className={cn("text-xs border-0 shadow-sm", syncStatus === 'synced' && "bg-emerald-500/10 text-emerald-400", syncStatus === 'syncing' && "bg-blue-500/10 text-blue-400", syncStatus === 'error' && "bg-red-500/10 text-red-400", syncStatus === 'offline' && "bg-slate-700 text-slate-400")}>
 //             {syncStatus === 'syncing' && <RefreshCw className="h-2.5 w-2.5 mr-1 animate-spin" />}
 //             {syncStatus === 'synced' && <CheckCircle className="h-2.5 w-2.5 mr-1" />}
 //             {syncStatus === 'error' && <AlertCircle className="h-2.5 w-2.5 mr-1" />}
@@ -2383,9 +1614,10 @@
 //           goToDashboard={() => router.push('/dashboard')}
 //         />
 //       )}
-//     </div> 
+//     </div>
 //   );
-// };
+// }
+
 
 'use client'
 
@@ -2412,7 +1644,7 @@ import NewFileModal from './components/NewFileModal';
 import InviteModal from './components/InviteModal';
 import EndSessionModal from './components/EndSessionModal';
 import SessionEndedModal from './components/SessionEndedModal';
-
+import Sidebar from './components/Sidebar';
 import { languageConfigs } from './utils/languageConfigs';
 
 import { Button } from '@/components/ui/button';
@@ -2420,9 +1652,11 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 import { cn } from '@/lib/utils';
 
+// Keep all your existing interfaces...
 interface Participant {
   id: string;
   user: {
@@ -2504,49 +1738,36 @@ interface SessionData {
   createdAt: string;
 }
 
-type LayoutMode = 'focus' | 'split' | 'preview' | 'chat' | 'participants' | 'output';
-type PanelState = 'hidden' | 'collapsed' | 'expanded';
+type SidebarMode = 'hidden' | 'participants' | 'chat';
+type PanelState = 'hidden' | 'expanded';
 
 interface LayoutState {
-  mode: LayoutMode;
-  sidebar: PanelState;
-  chat: PanelState;
-  participants: PanelState;
+  sidebar: SidebarMode;
   preview: PanelState;
   output: PanelState;
-  fullscreen: boolean;
 }
 
+// Enhanced Layout Manager with Terminal Support
 const useLayoutManager = () => {
   const [layout, setLayout] = useState<LayoutState>({
-    mode: 'focus',
-    sidebar: 'collapsed',
-    chat: 'hidden',
-    participants: 'hidden',
+    sidebar: 'hidden',
     preview: 'hidden',
     output: 'hidden',
-    fullscreen: false
   });
 
   const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
 
   useEffect(() => {
     const checkLayout = () => {
       const width = window.innerWidth;
       const mobile = width < 768;
-      const tablet = width >= 768 && width < 1024;
       
       setIsMobile(mobile);
-      setIsTablet(tablet);
       
       if (mobile) {
         setLayout(prev => ({
           ...prev,
-          mode: 'focus',
           sidebar: 'hidden',
-          chat: 'hidden',
-          participants: 'hidden',
           preview: 'hidden',
           output: 'hidden'
         }));
@@ -2558,50 +1779,39 @@ const useLayoutManager = () => {
     return () => window.removeEventListener('resize', checkLayout);
   }, []);
 
-  const switchMode = useCallback((mode: LayoutMode) => {
-    setLayout(prev => {
-      switch (mode) {
-        case 'focus':
-          return { ...prev, mode, sidebar: 'collapsed', chat: 'hidden', participants: 'hidden', preview: 'hidden', output: 'hidden' };
-        case 'chat':
-          return { ...prev, mode, sidebar: 'hidden', chat: 'expanded', participants: 'hidden', preview: 'hidden', output: 'hidden' };
-        case 'participants':
-          return { ...prev, mode, sidebar: 'hidden', chat: 'hidden', participants: 'expanded', preview: 'hidden', output: 'hidden' };
-        case 'preview':
-          return { ...prev, mode, sidebar: 'collapsed', chat: 'hidden', participants: 'hidden', preview: 'expanded', output: 'hidden' };
-        case 'output':
-          return { ...prev, mode, sidebar: 'collapsed', chat: 'hidden', participants: 'hidden', preview: 'hidden', output: 'expanded' };
-        default:
-          return prev;
-      }
-    });
+  const setSidebarMode = useCallback((mode: SidebarMode) => {
+    setLayout(prev => ({ ...prev, sidebar: mode }));
   }, []);
 
-  const togglePanel = useCallback((panel: 'chat' | 'participants' | 'preview' | 'output') => {
+  const togglePanel = useCallback((panel: 'preview' | 'output') => {
     setLayout(prev => ({
       ...prev,
-      [panel]: prev[panel] === 'hidden' ? 'expanded' : 'hidden',
-      ...(panel === 'chat' && prev.chat === 'hidden' && { participants: 'hidden' }),
-      ...(panel === 'participants' && prev.participants === 'hidden' && { chat: 'hidden' })
+      [panel]: prev[panel] === 'hidden' ? 'expanded' : 'hidden'
+    }));
+  }, []);
+
+  const toggleTerminal = useCallback(() => {
+    setLayout(prev => ({
+      ...prev,
+      output: prev.output === 'hidden' ? 'expanded' : 'hidden'
     }));
   }, []);
 
   return {
     layout,
     isMobile,
-    isTablet,
-    switchMode,
+    setSidebarMode,
     togglePanel,
-    toggleFullscreen: useCallback(() => {
-      setLayout(prev => ({ ...prev, fullscreen: !prev.fullscreen }));
-    }, []),
+    toggleTerminal,
     setLayout
   };
 };
 
+// Enhanced Panel Manager with Terminal Height
 const usePanelManager = () => {
   const [sidebarWidth, setSidebarWidth] = useState(350);
   const [outputWidth, setOutputWidth] = useState(450);
+  const [terminalHeight, setTerminalHeight] = useState(200);
   
   const sidebarPanel = {
     width: sidebarWidth,
@@ -2647,260 +1857,29 @@ const usePanelManager = () => {
     }
   };
 
-  return { sidebarPanel, outputPanel };
-};
-
-const ChatPanel = ({ 
-  user, messages, newMessage, setNewMessage, chatError, connected, 
-  isSendingMessage, sendMessage, handleChatKeyPress, messagesEndRef, 
-  getUserColor, onClose 
-}: any) => {
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const terminalPanel = {
+    height: terminalHeight,
+    startResize: (e: React.MouseEvent) => {
+      e.preventDefault();
+      const startY = e.clientY;
+      const startHeight = terminalHeight;
+      
+      const handleMouseMove = (e: MouseEvent) => {
+        const newHeight = Math.max(100, Math.min(400, startHeight - (e.clientY - startY)));
+        setTerminalHeight(newHeight);
+      };
+      
+      const handleMouseUp = () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+      
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
   };
 
-  return (
-    <div className="h-full bg-slate-900/95 border-r border-slate-700/50 backdrop-blur-xl flex flex-col">
-      <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
-              <MessageSquare className="h-4 w-4 text-emerald-400" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-100">Team Chat</h3>
-              <p className="text-xs text-slate-400">Real-time collaboration</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className={cn("w-2 h-2 rounded-full transition-colors", connected ? "bg-emerald-400 shadow-lg shadow-emerald-400/50" : "bg-red-400")} />
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-              <Hash className="h-2.5 w-2.5 mr-1" />
-              {messages.length}
-            </Badge>
-            <Button size="sm" variant="ghost" onClick={onClose} className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200" title="Close Chat">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex-1 flex flex-col min-h-0 p-4">
-        {chatError && (
-          <Alert variant="destructive" className="mb-3 bg-red-500/10 border-red-500/30 text-red-400">
-            <AlertDescription className="text-sm">{chatError}</AlertDescription>
-          </Alert>
-        )}
-        
-        <div className="flex-1 mb-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-          <div className="space-y-4">
-            {messages.length === 0 ? (
-              <div className="text-center text-slate-400 py-12 space-y-3">
-                <div className="p-4 bg-emerald-500/5 rounded-full w-fit mx-auto">
-                  <MessageCircle className="h-12 w-12 opacity-50" />
-                </div>
-                <div>
-                  <p className="font-medium">No messages yet</p>
-                  <p className="text-xs opacity-75">Start the conversation! 💬</p>
-                </div>
-              </div>
-            ) : (
-              messages.map((message: any) => (
-                <div key={message.id} className="group">
-                  <div className="flex items-start space-x-3">
-                    <div 
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold text-white flex-shrink-0 mt-0.5 shadow-lg"
-                      style={{ backgroundColor: getUserColor(message.user.id) }}
-                    >
-                      {message.user.displayName?.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className={cn("text-sm font-medium truncate", message.user.id === user?.id ? 'text-blue-400' : 'text-slate-200')}>
-                          {message.user.displayName}
-                          {message.user.id === user?.id && ' (You)'}
-                        </span>
-                        <span className="text-xs text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {formatTime(message.createdAt)}
-                        </span>
-                      </div>
-                      <div className={cn("text-sm rounded-xl px-4 py-2 border transition-all duration-200 backdrop-blur-sm", message.user.id === user?.id ? 'bg-blue-500/10 border-blue-500/30 text-blue-100 ml-0' : 'bg-slate-800/50 border-slate-700/30 text-slate-200')}>
-                        {message.content}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-        </div>
-        
-        <div className="space-y-2">
-          <div className="flex space-x-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder={connected ? "Type your message..." : "Connecting to chat..."}
-              className="text-sm bg-slate-800/50 border-slate-700/50 focus:border-emerald-500/50 backdrop-blur-sm"
-              onKeyPress={handleChatKeyPress}
-              disabled={!connected || isSendingMessage}
-              maxLength={500}
-            />
-            <Button 
-              size="sm" 
-              onClick={sendMessage} 
-              disabled={!connected || !newMessage.trim() || isSendingMessage}
-              className="px-3 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/25"
-            >
-              {isSendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            </Button>
-          </div>
-          
-          <div className="flex justify-between items-center text-xs text-slate-400">
-            <div className="flex items-center space-x-2">
-              {connected ? (
-                <>
-                  <Wifi className="h-3 w-3 text-emerald-400" />
-                  <span>Connected</span>
-                </>
-              ) : (
-                <>
-                  <WifiOff className="h-3 w-3 text-red-400" />
-                  <span>Reconnecting...</span>
-                </>
-              )}
-            </div>
-            <span className={cn("font-mono text-xs", newMessage.length > 450 ? "text-yellow-400" : "text-slate-500")}>
-              {newMessage.length}/500
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const ParticipantsPanel = ({ 
-  user, session, isHost, onlineUsers, participantCount, getUserColor, 
-  showParticipantMenu, setShowParticipantMenu, removeParticipant, onClose 
-}: any) => {
-  return (
-    <div className="h-full bg-slate-900/95 border-r border-slate-700/50 backdrop-blur-xl flex flex-col">
-      <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-              <Users className="h-4 w-4 text-blue-400" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-100">Participants</h3>
-              <p className="text-xs text-slate-400">{participantCount} {participantCount === 1 ? 'member' : 'members'} online</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
-              <div className="w-2 h-2 bg-emerald-400 rounded-full mr-1 animate-pulse shadow-lg shadow-emerald-400/50" />
-              {participantCount}
-            </Badge>
-            <Button size="sm" variant="ghost" onClick={onClose} className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200" title="Close Participants">
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      <div className="flex-1 p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 bg-slate-800/30 rounded-xl border border-slate-700/30 backdrop-blur-sm group">
-            <div className="flex items-center space-x-3 min-w-0 flex-1">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full border-2 border-slate-700 shadow-lg flex items-center justify-center text-sm font-semibold text-white" style={{ backgroundColor: getUserColor(user.id) }}>
-                  {user?.displayName?.charAt(0).toUpperCase()}
-                </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-lg shadow-emerald-400/50" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-semibold text-slate-100 truncate">{user?.displayName}</span>
-                  <Badge className="bg-blue-500/10 text-blue-400 border-blue-500/30 text-xs">You</Badge>
-                </div>
-                {session.owner.id === user?.id && (
-                  <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs mt-1">
-                    <Crown className="h-2.5 w-2.5 mr-1" />Host
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {onlineUsers.filter((u: any) => u.userId !== user?.id).map((participant: any) => (
-            <div key={participant.userId} className="flex items-center justify-between p-3 bg-slate-800/30 rounded-xl border border-slate-700/30 backdrop-blur-sm group hover:bg-slate-800/50 transition-all duration-200">
-              <div className="flex items-center space-x-3 min-w-0 flex-1">
-                <div className="relative">
-                  <div className="w-10 h-10 rounded-full border-2 border-slate-700 shadow-lg flex items-center justify-center text-sm font-semibold text-white" style={{ backgroundColor: getUserColor(participant.userId) }}>
-                    {participant.displayName?.charAt(0).toUpperCase()}
-                  </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-900 rounded-full shadow-lg shadow-emerald-400/50" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-sm font-semibold text-slate-100 truncate">{participant.displayName}</span>
-                    {session.owner.id === participant.userId && (
-                      <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-xs">
-                        <Crown className="h-2.5 w-2.5 mr-1" />Host
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center space-x-1 mt-0.5">
-                    <UserCheck className="h-2.5 w-2.5 text-emerald-400" />
-                    <span className="text-xs text-slate-400">Online</span>
-                  </div>
-                </div>
-              </div>
-              
-              {isHost && session.owner.id !== participant.userId && (
-                <div className="relative">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setShowParticipantMenu(showParticipantMenu === participant.userId ? null : participant.userId)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-red-500/10 hover:text-red-400"
-                  >
-                    <MoreVertical className="h-3 w-3" />
-                  </Button>
-                  {showParticipantMenu === participant.userId && (
-                    <div className="absolute right-0 top-full mt-1 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-20 backdrop-blur-xl">
-                      <button
-                        onClick={() => removeParticipant(participant.userId)}
-                        className="flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 w-full text-left transition-colors"
-                      >
-                        <UserMinus className="h-3 w-3 mr-2" />
-                        Remove from session
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-          
-          {participantCount === 1 && (
-            <div className="text-center text-slate-400 py-12 space-y-4">
-              <div className="p-4 bg-amber-500/5 rounded-full w-fit mx-auto">
-                <Sparkles className="h-12 w-12 opacity-50" />
-              </div>
-              <div>
-                <p className="font-medium">You're flying solo!</p>
-                <p className="text-xs opacity-75">{isHost ? 'Invite others to join the collaboration' : 'Waiting for others to join...'}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  return { sidebarPanel, outputPanel, terminalPanel };
 };
 
 export default function SessionPage() {
@@ -2909,13 +1888,15 @@ export default function SessionPage() {
   const { user } = useAuth();
   const { socket, connected, connecting } = useSocket();
   
-  const { layout, isMobile, isTablet, switchMode, togglePanel } = useLayoutManager();
-  const { sidebarPanel, outputPanel } = usePanelManager();
+  const { layout, isMobile, setSidebarMode, togglePanel, toggleTerminal } = useLayoutManager();
+  const { sidebarPanel, outputPanel, terminalPanel } = usePanelManager();
   
+  // All your existing state variables
   const [sessionJoined, setSessionJoined] = useState(false);
   const [sessionId] = useState(params.id as string);
   const [session, setSession] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [participantCount, setParticipantCount] = useState(1);
   const [syncStatus, setSyncStatus] = useState<'synced' | 'syncing' | 'error' | 'offline'>('synced');
   
@@ -2944,6 +1925,7 @@ export default function SessionPage() {
   const [sessionEndedReason, setSessionEndedReason] = useState('');
   const [endSessionLoading, setEndSessionLoading] = useState(false);
   
+  // All your existing refs
   const editorRef = useRef<any>(null);
   const monacoRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -2951,11 +1933,9 @@ export default function SessionPage() {
   const messageIdRef = useRef<Set<string>>(new Set());
   const isRemoteUpdateRef = useRef<{ [key: string]: boolean }>({});
   const syncTimeoutRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
-  const decorationsRef = useRef<{ [key: string]: string[] }>({});
+  const cursorElementsRef = useRef<{ [key: string]: HTMLElement }>({});
   
-  const userActivityRef = useRef<{ [key: string]: NodeJS.Timeout }>({});
-  const lastUserActivityRef = useRef<{ [key: string]: number }>({});
-
+  // Derived state
   const isHost = session?.owner?.id === user?.id;
   const activeFile = files.find(file => file.id === activeFileId);
 
@@ -2969,268 +1949,7 @@ export default function SessionPage() {
     return userColors[Math.abs(hash) % userColors.length];
   }, []);
 
- // Remove ALL the decoration-based cursor code and replace with this clean approach
-
-const cursorElementsRef = useRef<{ [key: string]: HTMLElement }>({});
-
-// Clean cursor positioning function using only DOM elements
-const updateCursorPosition = useCallback((userId: string, userName: string, color: string, lineNumber: number, columnPosition: number) => {
-  if (!editorRef.current || !monacoRef.current) return;
-  
-  try {
-    // Remove existing cursor
-    const existingCursor = cursorElementsRef.current[userId];
-    if (existingCursor) {
-      existingCursor.remove();
-      delete cursorElementsRef.current[userId];
-    }
-
-    // Get the MAIN editor container (not lines-content)
-    const editorDomNode = editorRef.current.getDomNode();
-    if (!editorDomNode) return;
-
-    // Use the main editor container, not lines-content
-    const editorContainer = editorDomNode.querySelector('.monaco-editor') || editorDomNode;
-
-    // Get position
-    const model = editorRef.current.getModel();
-    if (!model) return;
-
-    const lineCount = model.getLineCount();
-    const validLine = Math.max(1, Math.min(lineNumber, lineCount));
-    const lineLength = model.getLineMaxColumn(validLine);
-    const validColumn = Math.max(1, Math.min(columnPosition, lineLength));
-
-    const position = editorRef.current.getScrolledVisiblePosition({
-      lineNumber: validLine,
-      column: validColumn
-    });
-
-    if (!position) return;
-
-    const lineHeight = editorRef.current.getOption(monacoRef.current.editor.EditorOption.lineHeight);
-    
-    // Get editor's scroll position to adjust for scrolling
-    const scrollTop = editorRef.current.getScrollTop();
-    const scrollLeft = editorRef.current.getScrollLeft();
-    
-    // Create cursor wrapper to isolate from Monaco
-    const cursorWrapper = document.createElement('div');
-    cursorWrapper.id = `cursor-wrapper-${userId}`;
-    cursorWrapper.style.cssText = `
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1000;
-      overflow: hidden;
-    `;
-
-    // Create the actual cursor line
-    const cursorElement = document.createElement('div');
-    cursorElement.style.cssText = `
-      position: absolute;
-      top: ${position.top}px;
-      left: ${position.left}px;
-      width: 2px;
-      height: ${lineHeight}px;
-      background: ${color};
-      pointer-events: none;
-      opacity: 1;
-      animation: blink-${userId} 1s ease-in-out infinite;
-    `;
-
-    // Create PLAIN TEXT label (no HTML styling)
-    const labelElement = document.createElement('span');
-    labelElement.textContent = userName;
-    labelElement.style.cssText = `
-      position: absolute;
-      top: ${position.top - 16}px;
-      left: ${position.left}px;
-      background: ${color} !important;
-      color: white !important;
-      padding: 2px 4px !important;
-      border-radius: 2px !important;
-      font-size: 10px !important;
-      font-weight: normal !important;
-      white-space: nowrap !important;
-      pointer-events: none !important;
-      font-family: system-ui, -apple-system, sans-serif !important;
-      line-height: 1 !important;
-      display: inline-block !important;
-      box-shadow: none !important;
-      border: none !important;
-      margin: 0 !important;
-      z-index: 1001 !important;
-      /* Override ALL Monaco styles */
-      background-image: none !important;
-      text-shadow: none !important;
-      outline: none !important;
-    `;
-
-    // Add animation
-    if (!document.getElementById(`cursor-anim-${userId}`)) {
-      const style = document.createElement('style');
-      style.id = `cursor-anim-${userId}`;
-      style.textContent = `
-        @keyframes blink-${userId} {
-          0%, 70% { opacity: 1; }
-          71%, 100% { opacity: 0.3; }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    // Assemble: wrapper -> cursor + label
-    cursorWrapper.appendChild(cursorElement);
-    cursorWrapper.appendChild(labelElement);
-    editorContainer.appendChild(cursorWrapper);
-    
-    cursorElementsRef.current[userId] = cursorWrapper;
-
-    console.log(`✅ Clean cursor for ${userName} at ${validLine}:${validColumn}`);
-
-    // Auto-remove after 3 seconds
-    setTimeout(() => {
-      if (cursorElementsRef.current[userId]) {
-        cursorElementsRef.current[userId].remove();
-        delete cursorElementsRef.current[userId];
-        
-        const animStyle = document.getElementById(`cursor-anim-${userId}`);
-        if (animStyle) animStyle.remove();
-      }
-    }, 3000);
-
-  } catch (error) {
-    console.error(`Error positioning cursor for ${userName}:`, error);
-  }
-}, []);
-
-
-// Add this to your component's useEffect or in a global CSS file
-useEffect(() => {
-  const style = document.createElement('style');
-  style.textContent = `
-    /* Override Monaco's suggest widget interference */
-    .monaco-editor .suggest-widget {
-      z-index: 50 !important;
-    }
-    
-    /* Ensure our cursors are above content but below popups */
-    [id^="live-cursor-"] {
-      z-index: 999 !important;
-    }
-    
-    /* Hide Monaco's own cursor decorations for remote users */
-    .monaco-editor .cursor-foreground {
-      display: block;
-    }
-  `;
-  document.head.appendChild(style);
-  
-  return () => {
-    document.head.removeChild(style);
-  };
-}, []);
-
-
-// Simplified cleanup
-const removeCursorStyles = useCallback((userId: string) => {
-  if (cursorElementsRef.current[userId]) {
-    cursorElementsRef.current[userId].remove();
-    delete cursorElementsRef.current[userId];
-  }
-  
-  const animStyle = document.getElementById(`cursor-anim-${userId}`);
-  if (animStyle) animStyle.remove();
-}, []);
-
-// REMOVE all decoration-related code and use only this:
-const updateCursorDecorations = useCallback((cursorData: CursorPosition, color: string) => {
-  // DISABLED - only use DOM cursors now
-}, []);
-
-const addCursorStyles = useCallback((userId: string, userName: string, color: string, lineNumber: number = 1, columnPosition: number = 1) => {
-  // DISABLED - only use updateCursorPosition now  
-}, []);
- 
-  const cleanupInactiveCursors = useCallback(() => {
-    const now = Date.now();
-    const inactiveTimeout = 3000;
-    
-    setCursors(prev => {
-      const newCursors = { ...prev };
-      let hasChanges = false;
-      
-      Object.keys(newCursors).forEach(cursorKey => {
-        const cursor = newCursors[cursorKey];
-        const timeSinceActivity = now - (cursor.lastActivity || cursor.timestamp);
-        
-        if (timeSinceActivity > inactiveTimeout) {
-          delete newCursors[cursorKey];
-          removeCursorStyles(cursor.userId);
-          hasChanges = true;
-        }
-      });
-      
-      return hasChanges ? newCursors : prev;
-    });
-  }, []);
-
- 
-
- 
-
-  useEffect(() => {
-    const cleanupInterval = setInterval(cleanupInactiveCursors, 1000);
-    return () => clearInterval(cleanupInterval);
-  }, [cleanupInactiveCursors]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
-        switch (e.key) {
-          case 's':
-            e.preventDefault();
-            saveAllFiles();
-            break;
-          case 'e':
-            e.preventDefault();
-            if (activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable) {
-              executeCode();
-            }
-            break;
-          case 'p':
-            e.preventDefault();
-            togglePanel('preview');
-            break;
-          case 'k':
-            e.preventDefault();
-            if (layout.chat === 'expanded') {
-              togglePanel('chat');
-            } else if (layout.participants === 'expanded') {
-              togglePanel('participants');
-            } else {
-              togglePanel('chat');
-            }
-            break;
-          case 'n':
-            e.preventDefault();
-            if (isHost) setShowNewFileModal(true);
-            break;
-          case 'i':
-            e.preventDefault();
-            if (isHost) setShowInviteModal(true);
-            break;
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeFile, isHost, layout, togglePanel]);
+  // Keep ALL your existing functions but I'm showing the key ones here for brevity:
 
   const fetchSessionData = useCallback(async () => {
     try {
@@ -3274,6 +1993,7 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
     }
   }, [sessionId, activeFileId]);
 
+  // Socket handlers
   useEffect(() => {
     if (!socket || !connected || !sessionId || !user?.id) {
       if (socket && !connected) setSyncStatus('offline');
@@ -3289,286 +2009,20 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
       fetchSessionData();
     });
 
-    socket.on('user-joined', (data) => {
-      if (data.participantCount !== undefined) setParticipantCount(data.participantCount);
-      
-      const newUser: OnlineUser = {
-        userId: data.userId,
-        userEmail: data.userEmail,
-        displayName: data.userDisplayName || data.userEmail?.split('@')[0] || 'Anonymous',
-        socketId: data.socketId || socket.id!,
-        joinedAt: new Date(data.timestamp),
-        isOnline: true
-      };
-      
-      setOnlineUsers(prev => {
-        const filtered = prev.filter(u => u.userId !== data.userId);
-        return [...filtered, newUser];
-      });
-    });
-
-    socket.on('user-left', (data) => {
-      if (data.participantCount !== undefined) setParticipantCount(data.participantCount);
-      
-      setOnlineUsers(prev => prev.filter(u => u.userId !== data.userId));
-      
-      setCursors(prev => {
-        const newCursors = { ...prev };
-        Object.keys(newCursors).forEach(key => {
-          if (key.startsWith(data.userId)) delete newCursors[key];
-        });
-        return newCursors;
-      });
-      
-      removeCursorStyles(data.userId);
-    });
-
-    socket.on('cursor-position', (data) => {      
-      if (data.userId === user?.id) return;
-      
-      if (!data.position || typeof data.position.lineNumber !== 'number' || typeof data.position.column !== 'number') return;
-      
-      const userColor = getUserColor(data.userId);
-      const validLine = Math.max(1, Math.floor(data.position.lineNumber));
-      const validColumn = Math.max(1, Math.floor(data.position.column));
-      
-      // ONLY use DOM positioning - no decorations
-      if (data.fileId === activeFileId) {
-        updateCursorPosition(data.userId, data.userName, userColor, validLine, validColumn);
-      }
-    });
-    
-
-    socket.on('file-update', (data) => {
-      if (data.userId === user.id) return;
-      
-      isRemoteUpdateRef.current[data.fileId] = true;
-      
-      setFiles(prev => prev.map(file => 
-        file.id === data.fileId ? { ...file, content: data.content } : file
-      ));
-      
-      lastCodeChangeRef.current[data.fileId] = data.content;
-      
-      if (data.fileId === activeFileId && editorRef.current) {
-        const currentValue = editorRef.current.getValue();
-        if (currentValue !== data.content) {
-          const position = editorRef.current.getPosition();
-          editorRef.current.setValue(data.content);
-          if (position) editorRef.current.setPosition(position);
-        }
-      }
-      
-      setTimeout(() => {
-        isRemoteUpdateRef.current[data.fileId] = false;
-      }, 100);
-    });
-
-    socket.on('chat-message', (message) => {
-      setChatError('');
-      if (!messageIdRef.current.has(message.id)) {
-        messageIdRef.current.add(message.id);
-        setMessages(prev => [...prev, message]);
-      }
-    });
-
-    socket.on('session-ended', (data) => {
-      setShowSessionEndedModal(true);
-      setSessionEndedReason(data.reason || 'The host has ended this session');
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 3000);
-    });
+    // Add all your other socket handlers here...
 
     return () => {
       socket.off('session-joined');
-      socket.off('user-joined');
-      socket.off('user-left');
-      socket.off('cursor-position');
-      socket.off('file-update');
-      socket.off('chat-message');
-      socket.off('session-ended');
+      // Add other socket.off calls
     };
-  }, [socket, connected, sessionId, user?.id, router, activeFileId, fetchSessionData, getUserColor, updateCursorDecorations, removeCursorStyles]);
+  }, [socket, connected, sessionId, user?.id, fetchSessionData]);
 
-  const handleEditorChange = useCallback((value: string | undefined) => {
-    if (!value || !socket || !connected || !activeFileId) return;
-    
-    if (isRemoteUpdateRef.current[activeFileId]) return;
-    
-    setFiles(prev => prev.map(file => 
-      file.id === activeFileId ? { ...file, content: value } : file
-    ));
-    
-    if (lastCodeChangeRef.current[activeFileId] !== value) {
-      lastCodeChangeRef.current[activeFileId] = value;
-      setSyncStatus('syncing');
-      
-      if (syncTimeoutRef.current[activeFileId]) {
-        clearTimeout(syncTimeoutRef.current[activeFileId]);
-      }
-      
-      syncTimeoutRef.current[activeFileId] = setTimeout(() => {
-        if (socket && connected && lastCodeChangeRef.current[activeFileId] === value) {
-          socket.emit('file-update', {
-            fileId: activeFileId,
-            content: value,
-            sessionId,
-            timestamp: Date.now()
-          });
-          setSyncStatus('synced');
-        }
-      }, 200);
-    }
-  }, [socket, connected, sessionId, activeFileId]);
-
-  // const handleEditorDidMount = (editor: any, monaco: any) => {
-  //   editorRef.current = editor;
-  //   monacoRef.current = monaco;
-    
-  //   editor.updateOptions({
-  //     fontSize: isMobile ? 13 : 15,
-  //     fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-  //     lineHeight: 1.6,
-  //     minimap: { enabled: !isMobile },
-  //     scrollBeyondLastLine: false,
-  //     wordWrap: 'on',
-  //     automaticLayout: true,
-  //     theme: 'vs-dark',
-  //     tabSize: 2,
-  //     insertSpaces: true,
-  //     cursorBlinking: 'smooth',
-  //     lineNumbers: isMobile ? 'off' : 'on',
-  //     glyphMargin: !isMobile,
-  //     folding: !isMobile,
-  //     readOnly: false,
-  //     renderValidationDecorations: 'on',
-  //   });
-
-  //   if (activeFile) {
-  //     editor.setValue(activeFile.content);
-  //   }
-
-  //   setTimeout(() => {
-  //     editor.focus();
-  //   }, 100);
-
-  //   if (socket && connected && sessionId && user && activeFileId) {
-  //     let lastCursorUpdate = 0;
-      
-  //     editor.onDidChangeCursorPosition((e: any) => {
-  //       const now = Date.now();
-        
-  //       if (now - lastCursorUpdate < 50) return;
-  //       lastCursorUpdate = now;
-        
-  //       const position = e.position;
-  //       const selection = editor.getSelection();
-        
-  //       if (!position || typeof position.lineNumber !== 'number' || typeof position.column !== 'number' || position.lineNumber < 1 || position.column < 1) return;
-        
-  //       const cursorData = {
-  //         sessionId,
-  //         fileId: activeFileId,
-  //         userId: user.id,
-  //         userName: user.displayName || user.name || 'Anonymous',
-  //         position: {
-  //           lineNumber: position.lineNumber,
-  //           column: position.column
-  //         },
-  //         selection: selection ? {
-  //           startLineNumber: selection.startLineNumber,
-  //           startColumn: selection.startColumn,
-  //           endLineNumber: selection.endLineNumber,
-  //           endColumn: selection.endColumn
-  //         } : null,
-  //         timestamp: now
-  //       };
-        
-  //       socket.emit('cursor-position', cursorData);
-  //     });
-  //   }
-  // };
-  const handleEditorDidMount = (editor: any, monaco: any) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-    
-    editor.updateOptions({
-      fontSize: isMobile ? 13 : 15,
-      fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-      lineHeight: 1.6,
-      minimap: { enabled: !isMobile },
-      scrollBeyondLastLine: false,
-      wordWrap: 'on',
-      automaticLayout: true,
-      theme: 'vs-dark',
-      tabSize: 2,
-      insertSpaces: true,
-      cursorBlinking: 'smooth',
-      lineNumbers: isMobile ? 'off' : 'on',
-      glyphMargin: !isMobile,
-      folding: !isMobile,
-      readOnly: false,
-      renderValidationDecorations: 'on',
-    });
-  
-    if (activeFile) {
-      editor.setValue(activeFile.content);
-    }
-  
-    setTimeout(() => {
-      editor.focus();
-    }, 100);
-  
-    if (socket && connected && sessionId && user && activeFileId) {
-      let lastCursorUpdate = 0;
-      let isUpdatingPosition = false; // NEW: Flag to prevent infinite loops
-      
-      editor.onDidChangeCursorPosition((e: any) => {
-        const now = Date.now();
-        
-        // Prevent infinite loops when we're updating positions
-        if (isUpdatingPosition) return;
-        
-        // Throttle cursor updates to prevent spam (100ms instead of 50ms)
-        if (now - lastCursorUpdate < 100) return;
-        lastCursorUpdate = now;
-        
-        const position = e.position;
-        const selection = editor.getSelection();
-        
-        if (!position || typeof position.lineNumber !== 'number' || typeof position.column !== 'number' || position.lineNumber < 1 || position.column < 1) return;
-        
-        console.log(`📍 Sending cursor position - Line: ${position.lineNumber}, Col: ${position.column}`);
-        
-        const cursorData = {
-          sessionId,
-          fileId: activeFileId,
-          userId: user.id,
-          userName: user.displayName || user.name || 'Anonymous',
-          position: {
-            lineNumber: position.lineNumber,
-            column: position.column
-          },
-          selection: selection ? {
-            startLineNumber: selection.startLineNumber,
-            startColumn: selection.startColumn,
-            endLineNumber: selection.endLineNumber,
-            endColumn: selection.endColumn
-          } : null,
-          timestamp: now
-        };
-        
-        socket.emit('cursor-position', cursorData);
-      });
-    }
-  };
-  
-  const executeCode = useCallback(async () => {
+  const handleExecuteCode = useCallback(async () => {
     if (!activeFile || isExecuting) return;
 
     setIsExecuting(true);
     setExecutionResult(null);
+    toggleTerminal(); // Auto-open terminal when executing
     
     try {
       const startTime = performance.now();
@@ -3579,10 +2033,6 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
       }
 
       const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Authentication token not found');
-      }
-
       const response = await fetch('/api/execute', {
         method: 'POST',
         headers: {
@@ -3611,8 +2061,6 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
         language: activeFile.language
       });
 
-      switchMode('output');
-
     } catch (error) {
       setExecutionResult({
         output: '',
@@ -3620,15 +2068,19 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
         executionTime: 0,
         language: activeFile.language
       });
-
-      switchMode('output');
     } finally {
       setIsExecuting(false);
     }
-  }, [activeFile, isExecuting, sessionId, switchMode]);
+  }, [activeFile, isExecuting, sessionId, toggleTerminal]);
 
-  const createNewFile = async () => {
-    if (!newFileName.trim() || !socket || !connected) return;
+  const handleNewFileClick = useCallback(() => {
+    if (isHost && !fileCreationLoading) {
+      setShowNewFileModal(true);
+    }
+  }, [isHost, fileCreationLoading]);
+
+  const handleCreateFile = useCallback(async () => {
+    if (!newFileName.trim() || !socket || !connected || fileCreationLoading) return;
     
     if (files.some(f => f.name.toLowerCase() === newFileName.toLowerCase())) {
       alert('A file with this name already exists!');
@@ -3668,7 +2120,6 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
         setShowNewFileModal(false);
         
         socket?.emit('file-created', { sessionId, file: newFile });
-        
       } else {
         const error = await response.json();
         alert(error.error || 'Failed to create file');
@@ -3679,45 +2130,15 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
     } finally {
       setFileCreationLoading(false);
     }
-  };
+  }, [newFileName, socket, connected, files, newFileLanguage, sessionId, fileCreationLoading]);
 
-  const deleteFile = async (fileId: string) => {
-    if (!isHost) return;
-    
-    if (files.length === 1) {
-      alert('Cannot delete the last file in the session');
-      return;
-    }
-    
-    if (!confirm('Are you sure you want to delete this file?')) return;
-    
-    try {
-      const token = localStorage.getItem('accessToken');
-      const response = await fetch(`/api/sessions/files/${fileId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        setFiles(prev => prev.filter(f => f.id !== fileId));
-        
-        if (fileId === activeFileId) {
-          const remainingFiles = files.filter(f => f.id !== fileId);
-          if (remainingFiles.length > 0) {
-            setActiveFileId(remainingFiles[0].id);
-          } else {
-            setActiveFileId(null);
-          }
-        }
-        
-        socket?.emit('file-deleted', { sessionId, fileId });
-      }
-    } catch (error) {
-      console.error('Failed to delete file:', error);
-    }
-  };
+  // Add all your other functions (copySessionLink, saveAllFiles, etc.)
+  const copySessionLink = useCallback(() => {
+    const link = `${window.location.origin}/session/${sessionId}`;
+    navigator.clipboard.writeText(link);
+  }, [sessionId]);
 
-  const saveAllFiles = async () => {
+  const saveAllFiles = useCallback(async () => {
     try {
       if (activeFileId && editorRef.current) {
         const currentContent = editorRef.current.getValue();
@@ -3726,7 +2147,7 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
         );
         
         const token = localStorage.getItem('accessToken');
-        const response = await fetch(`/api/sessions/${sessionId}/save`, {
+        await fetch(`/api/sessions/${sessionId}/save`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -3738,94 +2159,14 @@ const addCursorStyles = useCallback((userId: string, userName: string, color: st
     } catch (error) {
       console.error('Failed to save files:', error);
     }
-  };
+  }, [activeFileId, files, sessionId]);
 
-  const sendMessage = useCallback(() => {
-    if (!newMessage.trim() || !socket || !connected || isSendingMessage) return;
-
-    setIsSendingMessage(true);
-    setChatError('');
-
-    socket.emit('chat-message', {
-      content: newMessage.trim(),
-      sessionId,
-      timestamp: Date.now()
-    });
-
-    setNewMessage('');
-    
-    setTimeout(() => {
-      setIsSendingMessage(false);
-    }, 5000);
-  }, [newMessage, socket, connected, sessionId, isSendingMessage]);
-
-  const handleChatKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  const removeParticipant = useCallback((participantId: string) => {
-    if (!isHost || !socket || !connected) return;
-    
-    socket.emit('remove-participant', {
-      sessionId,
-      participantId
-    });
-    
-    setShowParticipantMenu(null);
-  }, [isHost, socket, connected, sessionId]);
-
-  const copySessionLink = () => {
-    const link = `${window.location.origin}/session/${sessionId}`;
-    navigator.clipboard.writeText(link);
-  };
-
-  const exportSession = async () => {
+  const exportSession = useCallback(async () => {
     if (!session) return;
+    // Your export logic here
+  }, [session, files, activeFileId]);
 
-    const JSZip = (await import('jszip')).default;
-    const zip = new JSZip();
-    
-    const currentFiles = files.map(file => {
-      if (file.id === activeFileId && editorRef.current) {
-        return { ...file, content: editorRef.current.getValue() };
-      }
-      return file;
-    });
-    
-    currentFiles.forEach(file => {
-      zip.file(file.name, file.content);
-    });
-    
-    const readme = `# ${session.title}
-
-## Description
-${session.description || 'No description provided'}
-
-## Files
-${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
-
-## Session Info
-- Created: ${new Date(session.createdAt).toLocaleString()}
-- Type: ${session.type}
-- Status: ${session.isActive ? 'Active' : 'Ended'}
-`;
-    zip.file('README.md', readme);
-    
-    const blob = await zip.generateAsync({ type: 'blob' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${session.title.replace(/[^a-zA-Z0-9]/g, '_')}.zip`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const generatePreview = () => {
+  const generatePreview = useCallback(() => {
     const htmlFile = files.find(f => f.language === 'html');
     const cssFile = files.find(f => f.language === 'css');
     const jsFile = files.find(f => f.language === 'javascript');
@@ -3862,9 +2203,143 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
     </script>
 </body>
 </html>`;
-  };
+  }, [files, activeFileId, session?.title]);
 
-  const handleEndSession = async () => {
+  const deleteFile = useCallback(async (fileId: string) => {
+    if (!isHost) return;
+    
+    if (files.length === 1) {
+      alert('Cannot delete the last file in the session');
+      return;
+    }
+    
+    if (!confirm('Are you sure you want to delete this file?')) return;
+    
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`/api/sessions/files/${fileId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        setFiles(prev => prev.filter(f => f.id !== fileId));
+        
+        if (fileId === activeFileId) {
+          const remainingFiles = files.filter(f => f.id !== fileId);
+          if (remainingFiles.length > 0) {
+            setActiveFileId(remainingFiles[0].id);
+          }
+        }
+        
+        socket?.emit('file-deleted', { sessionId, fileId });
+      }
+    } catch (error) {
+      console.error('Failed to delete file:', error);
+    }
+  }, [isHost, files, activeFileId, sessionId, socket]);
+
+  const sendMessage = useCallback(() => {
+    if (!newMessage.trim() || !socket || !connected || isSendingMessage) return;
+
+    setIsSendingMessage(true);
+    setChatError('');
+
+    socket.emit('chat-message', {
+      content: newMessage.trim(),
+      sessionId,
+      timestamp: Date.now()
+    });
+
+    setNewMessage('');
+    
+    setTimeout(() => {
+      setIsSendingMessage(false);
+    }, 5000);
+  }, [newMessage, socket, connected, sessionId, isSendingMessage]);
+
+  const handleChatKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }, [sendMessage]);
+
+  const removeParticipant = useCallback((participantId: string) => {
+    if (!isHost || !socket || !connected) return;
+    
+    socket.emit('remove-participant', {
+      sessionId,
+      participantId
+    });
+    
+    setShowParticipantMenu(null);
+  }, [isHost, socket, connected, sessionId]);
+
+  const handleEditorChange = useCallback((value: string | undefined) => {
+    if (!value || !socket || !connected || !activeFileId) return;
+    
+    if (isRemoteUpdateRef.current[activeFileId]) return;
+    
+    setFiles(prev => prev.map(file => 
+      file.id === activeFileId ? { ...file, content: value } : file
+    ));
+    
+    if (lastCodeChangeRef.current[activeFileId] !== value) {
+      lastCodeChangeRef.current[activeFileId] = value;
+      setSyncStatus('syncing');
+      
+      if (syncTimeoutRef.current[activeFileId]) {
+        clearTimeout(syncTimeoutRef.current[activeFileId]);
+      }
+      
+      syncTimeoutRef.current[activeFileId] = setTimeout(() => {
+        if (socket && connected && lastCodeChangeRef.current[activeFileId] === value) {
+          socket.emit('file-update', {
+            fileId: activeFileId,
+            content: value,
+            sessionId,
+            timestamp: Date.now()
+          });
+          setSyncStatus('synced');
+        }
+      }, 200);
+    }
+  }, [socket, connected, sessionId, activeFileId]);
+
+  const handleEditorDidMount = useCallback((editor: any, monaco: any) => {
+    editorRef.current = editor;
+    monacoRef.current = monaco;
+    
+    editor.updateOptions({
+      fontSize: isMobile ? 13 : 15,
+      fontFamily: 'var(--font-mono)',
+      lineHeight: 1.6,
+      minimap: { enabled: !isMobile },
+      scrollBeyondLastLine: false,
+      wordWrap: 'on',
+      automaticLayout: true,
+      theme: 'vs-dark',
+      tabSize: 2,
+      insertSpaces: true,
+      cursorBlinking: 'smooth',
+      lineNumbers: isMobile ? 'off' : 'on',
+      glyphMargin: !isMobile,
+      folding: !isMobile,
+      readOnly: false,
+      renderValidationDecorations: 'on',
+    });
+
+    if (activeFile) {
+      editor.setValue(activeFile.content);
+    }
+
+    setTimeout(() => {
+      editor.focus();
+    }, 100);
+  }, [activeFile, isMobile]);
+
+  const handleEndSession = useCallback(async () => {
     if (!isHost || !session) return;
 
     setEndSessionLoading(true);
@@ -3889,139 +2364,311 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
           hostName: user?.displayName || 'Host'
         });
         
-        await new Promise(resolve => setTimeout(resolve, 500));
         router.push('/dashboard');
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to end session');
       }
     } catch (error) {
       console.error('Failed to end session:', error);
-      alert('Failed to end session. Please try again.');
     } finally {
       setEndSessionLoading(false);
       setShowEndSessionModal(false);
     }
-  };
+  }, [isHost, session, sessionId, socket, user, router]);
 
+  // Clean and Professional Actions Bar with Better Spacing
   const QuickActionsBar = () => (
-    <div className="flex items-center justify-between p-3 bg-slate-900/95 border-b border-slate-700/50 backdrop-blur-xl">
-      <div className="flex items-center space-x-3">
-        <div className="flex items-center space-x-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 backdrop-blur-sm">
-          <Button size="sm" variant={layout.mode === 'focus' ? 'default' : 'ghost'} onClick={() => switchMode('focus')} className={cn("h-8 px-3 rounded-lg transition-all duration-200", layout.mode === 'focus' ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "hover:bg-slate-700/50 text-slate-300")} title="Focus Mode (Escape)">
-            <Layout className="h-3 w-3 mr-1" />
-            <span className="hidden sm:inline">Focus</span>
-          </Button>
-
-          <Button size="sm" variant={layout.participants === 'expanded' ? 'default' : 'ghost'} onClick={() => togglePanel('participants')} className={cn("h-8 px-3 rounded-lg relative transition-all duration-200", layout.participants === 'expanded' ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25" : "hover:bg-slate-700/50 text-slate-300")} title="Participants">
-            <Users className="h-3 w-3 mr-1" />
-            <span className="hidden sm:inline">People</span>
+    <div 
+      className="h-12 px-6 flex items-center justify-between font-sans border-b"
+      style={{ 
+        backgroundColor: 'var(--background)', 
+        borderColor: 'var(--border)',
+        color: 'var(--foreground)'
+      }}
+    >
+      {/* Left Section - View Controls */}
+      <div className="flex items-center gap-6">
+        {/* Sidebar Controls */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSidebarMode(layout.sidebar === 'participants' ? 'hidden' : 'participants')}
+            className={cn(
+              "h-8 px-4 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200",
+              layout.sidebar === 'participants'
+                ? "text-white shadow-sm"
+                : "hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)]"
+            )}
+            style={{
+              backgroundColor: layout.sidebar === 'participants' ? 'var(--primary)' : 'transparent',
+              color: layout.sidebar === 'participants' ? 'var(--primary-foreground)' : 'var(--muted-foreground)'
+            }}
+          >
+            <Users className="h-4 w-4" />
+            <span>People</span>
             {participantCount > 1 && (
-              <Badge className="absolute -top-1 -right-1 w-4 h-4 p-0 text-xs flex items-center justify-center bg-emerald-600 border-0 shadow-lg shadow-emerald-600/25">
+              <Badge 
+                className="text-[10px] h-4 min-w-[16px] px-1.5 border-0 ml-1"
+                style={{ backgroundColor: 'var(--chart-1)', color: 'white' }}
+              >
                 {participantCount}
               </Badge>
             )}
-          </Button>
+          </button>
 
-          <Button size="sm" variant={layout.chat === 'expanded' ? 'default' : 'ghost'} onClick={() => togglePanel('chat')} className={cn("h-8 px-3 rounded-lg relative transition-all duration-200", layout.chat === 'expanded' ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/25" : "hover:bg-slate-700/50 text-slate-300")} title="Chat">
-            <MessageSquare className="h-3 w-3 mr-1" />
-            <span className="hidden sm:inline">Chat</span>
-            {messages.length > 0 && layout.chat !== 'expanded' && (
-              <div className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse shadow-lg shadow-emerald-400/50" />
+          <button
+            onClick={() => setSidebarMode(layout.sidebar === 'chat' ? 'hidden' : 'chat')}
+            className={cn(
+              "h-8 px-4 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200 relative",
+              layout.sidebar === 'chat'
+                ? "text-white shadow-sm"
+                : "hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)]"
             )}
-          </Button>
-
-          <Button size="sm" variant={layout.preview === 'expanded' ? 'default' : 'ghost'} onClick={() => togglePanel('preview')} className={cn("h-8 px-3 rounded-lg transition-all duration-200", layout.preview === 'expanded' ? "bg-purple-600 text-white shadow-lg shadow-purple-600/25" : "hover:bg-slate-700/50 text-slate-300")} title="Preview Mode">
-            <Eye className="h-3 w-3 mr-1" />
-            <span className="hidden sm:inline">Preview</span>
-          </Button>
-
-          <Button size="sm" variant={layout.output === 'expanded' ? 'default' : 'ghost'} onClick={() => togglePanel('output')} className={cn("h-8 px-3 rounded-lg transition-all duration-200", layout.output === 'expanded' ? "bg-orange-600 text-white shadow-lg shadow-orange-600/25" : "hover:bg-slate-700/50 text-slate-300")} title="Output Mode">
-            <Terminal className="h-3 w-3 mr-1" />
-            <span className="hidden sm:inline">Output</span>
-          </Button>
+            style={{
+              backgroundColor: layout.sidebar === 'chat' ? 'var(--primary)' : 'transparent',
+              color: layout.sidebar === 'chat' ? 'var(--primary-foreground)' : 'var(--muted-foreground)'
+            }}
+          >
+            <MessageSquare className="h-4 w-4" />
+            <span>Chat</span>
+            {messages.length > 0 && layout.sidebar !== 'chat' && (
+              <div 
+                className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full" 
+                style={{ backgroundColor: 'var(--chart-2)' }}
+              />
+            )}
+          </button>
         </div>
 
-        <div className="flex items-center space-x-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 backdrop-blur-sm">
-          <Button size="sm" variant="ghost" onClick={saveAllFiles} className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200" title="Save All (Ctrl+S)">
-            <Save className="h-3 w-3" />
-          </Button>
+        {/* Separator */}
+        <div className="w-px h-6" style={{ backgroundColor: 'var(--border)' }} />
 
-          {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
-            <Button size="sm" variant="ghost" onClick={executeCode} disabled={isExecuting} className={cn("h-8 px-3 rounded-lg transition-all duration-200", isExecuting ? "text-emerald-400 bg-emerald-500/10" : "hover:bg-emerald-500/10 hover:text-emerald-400 text-slate-300")} title="Run Code (Ctrl+E)">
-              {isExecuting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3" />}
-            </Button>
-          )}
+        {/* Panel Controls */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => togglePanel('preview')}
+            className={cn(
+              "h-8 px-4 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200",
+              layout.preview === 'expanded'
+                ? "text-white shadow-sm"
+                : "hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)]"
+            )}
+            style={{
+              backgroundColor: layout.preview === 'expanded' ? 'var(--primary)' : 'transparent',
+              color: layout.preview === 'expanded' ? 'var(--primary-foreground)' : 'var(--muted-foreground)'
+            }}
+          >
+            <Eye className="h-4 w-4" />
+            <span>Preview</span>
+          </button>
 
-          {isHost && (
-            <Button size="sm" variant="ghost" onClick={() => setShowNewFileModal(true)} className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200" title="New File (Ctrl+N)">
-              <Plus className="h-3 w-3" />
-            </Button>
-          )}
+          <button
+            onClick={toggleTerminal}
+            className={cn(
+              "h-8 px-4 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200",
+              layout.output === 'expanded'
+                ? "text-white shadow-sm"
+                : "hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)]"
+            )}
+            style={{
+              backgroundColor: layout.output === 'expanded' ? 'var(--primary)' : 'transparent',
+              color: layout.output === 'expanded' ? 'var(--primary-foreground)' : 'var(--muted-foreground)'
+            }}
+          >
+            <Terminal className="h-4 w-4" />
+            <span>Terminal</span>
+          </button>
         </div>
       </div>
 
-      <div className="flex items-center space-x-2">
-        <div className="flex items-center space-x-1 bg-slate-800/50 border border-slate-700/50 rounded-xl p-1 backdrop-blur-sm">
-          <Button size="sm" variant="ghost" onClick={copySessionLink} className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200" title="Share Link">
-            <Share2 className="h-3 w-3" />
+      {/* Right Section - Action Buttons */}
+      <div className="flex items-center gap-3">
+        {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
+          <Button
+            onClick={handleExecuteCode}
+            disabled={isExecuting}
+            className="h-8 px-5 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200 border-0 shadow-sm"
+            style={{
+              backgroundColor: isExecuting ? 'var(--muted)' : 'var(--primary)',
+              color: isExecuting ? 'var(--muted-foreground)' : 'var(--primary-foreground)',
+              cursor: isExecuting ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {isExecuting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+            <span>Run Code</span>
           </Button>
+        )}
 
-          <Button size="sm" variant="ghost" onClick={exportSession} className="h-8 px-3 rounded-lg hover:bg-slate-700/50 text-slate-300 transition-all duration-200" title="Export Session">
-            <Download className="h-3 w-3" />
+        {isHost && (
+          <Button
+            onClick={handleNewFileClick}
+            disabled={fileCreationLoading}
+            className="h-8 px-5 text-sm font-medium rounded-lg flex items-center gap-2 transition-all duration-200 border-0 shadow-sm"
+            style={{ 
+              backgroundColor: fileCreationLoading ? 'var(--muted)' : 'var(--secondary)', 
+              color: fileCreationLoading ? 'var(--muted-foreground)' : 'var(--secondary-foreground)',
+              cursor: fileCreationLoading ? 'not-allowed' : 'pointer'
+            }}
+          >
+            {fileCreationLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+            <span>New File</span>
           </Button>
+        )}
+      </div>
+    </div>
+  );
 
-          {isHost && (
-            <>
-              <Button size="sm" variant="ghost" onClick={() => setShowInviteModal(true)} className="h-8 px-3 rounded-lg hover:bg-blue-500/10 hover:text-blue-400 text-slate-300 transition-all duration-200" title="Invite Users">
-                <UserPlus className="h-3 w-3" />
-              </Button>
+  // Clean Terminal Component using CSS Variables
+  const TerminalOutput = () => (
+    <div 
+      className="border-t flex flex-col font-mono"
+      style={{ 
+        height: `${terminalPanel.height}px`,
+        backgroundColor: 'var(--background)',
+        borderColor: 'var(--border)'
+      }}
+    >
+      {/* Resize Handle */}
+      <div 
+        className="h-1 cursor-row-resize transition-all relative group"
+        style={{ backgroundColor: 'var(--border)' }}
+        onMouseDown={terminalPanel.startResize}
+      >
+        <div className="absolute inset-0 group-hover:bg-[var(--accent)]" />
+      </div>
 
-              <Button size="sm" variant="ghost" onClick={() => setShowEndSessionModal(true)} disabled={endSessionLoading} className="h-8 px-3 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-slate-300 transition-all duration-200" title="End Session">
-                {endSessionLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <StopCircle className="h-3 w-3" />}
-              </Button>
-            </>
+      {/* Terminal Header */}
+      <div 
+        className="flex items-center justify-between px-4 py-3 border-b"
+        style={{ 
+          backgroundColor: 'var(--card)', 
+          borderColor: 'var(--border)',
+          color: 'var(--card-foreground)'
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: 'var(--destructive)' }}
+          >
+            <Terminal className="h-4 w-4" style={{ color: 'var(--destructive-foreground)' }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold font-sans" style={{ color: 'var(--foreground)' }}>Terminal</h3>
+            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+              {activeFile ? `${activeFile.language} execution` : 'Code output'}
+            </p>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {executionResult && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => navigator.clipboard.writeText(executionResult.error || executionResult.output || '')}
+              className="h-7 px-3 text-xs border font-sans"
+              style={{ 
+                borderColor: 'var(--border)', 
+                backgroundColor: 'transparent',
+                color: 'var(--foreground)'
+              }}
+            >
+              <Copy className="h-3 w-3 mr-1.5" />
+              Copy
+            </Button>
+          )}
+          
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={toggleTerminal}
+            className="h-7 w-7 p-0 hover:bg-[var(--destructive)] hover:text-[var(--destructive-foreground)]"
+            style={{ color: 'var(--muted-foreground)' }}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Terminal Content */}
+      <div 
+        className="h-full overflow-auto p-4"
+        style={{ backgroundColor: 'var(--background)' }}
+      >
+        <div className="font-mono text-sm">
+          {isExecuting ? (
+            <div className="flex items-center gap-3" style={{ color: 'var(--chart-1)' }}>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Executing {activeFile?.language} code...</span>
+            </div>
+          ) : executionResult ? (
+            <div className="space-y-4">
+              <div className={cn(
+                "flex items-center gap-2 text-sm font-semibold"
+              )}
+              style={{ 
+                color: executionResult.error ? 'var(--destructive)' : 'var(--chart-4)' 
+              }}>
+                {executionResult.error ? (
+                  <AlertCircle className="h-4 w-4" />
+                ) : (
+                  <CheckCircle className="h-4 w-4" />
+                )}
+                <span>
+                  {executionResult.error ? "Execution Failed" : "Execution Successful"}
+                </span>
+                <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                  ({executionResult.executionTime}ms)
+                </span>
+              </div>
+              
+              <pre 
+                className="whitespace-pre-wrap text-sm leading-relaxed p-4 rounded-lg border"
+                style={{ 
+                  color: executionResult.error ? 'var(--destructive)' : 'var(--chart-4)',
+                  backgroundColor: executionResult.error ? 'var(--destructive)' + '10' : 'var(--muted)',
+                  borderColor: 'var(--border)'
+                }}
+              >
+                {executionResult.error || executionResult.output || 'No output generated'}
+              </pre>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-40" style={{ color: 'var(--muted-foreground)' }}>
+              <div className="text-center">
+                <Terminal className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p className="text-sm">No output yet. Run your code to see results.</p>
+              </div>
+            </div>
           )}
         </div>
       </div>
     </div>
   );
 
-  useEffect(() => {
-    return () => {
-      if (socket && sessionId) {
-        socket.emit('leave-session', sessionId);
-      }
-      
-      Object.values(syncTimeoutRef.current).forEach(timeout => {
-        if (timeout) clearTimeout(timeout);
-      });
-      
-      Object.values(userActivityRef.current).forEach(timeout => {
-        if (timeout) clearTimeout(timeout);
-      });
-      
-      Object.keys(cursors).forEach(cursorKey => {
-        const userId = cursorKey.split('-')[0];
-        removeCursorStyles(userId);
-      });
-      
-      decorationsRef.current = {};
-    };
-  }, [socket, sessionId, cursors, removeCursorStyles]);
-
+  // Keep all your existing loading states but use CSS variables
   if (!user) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <Card className="p-8 max-w-md mx-4" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
           <div className="text-center space-y-6">
-            <div className="p-4 bg-blue-500/20 rounded-full w-fit mx-auto">
-              <Lock className="h-16 w-16 text-blue-400" />
+            <div className="p-4 rounded-full w-fit mx-auto" style={{ backgroundColor: 'var(--primary)' + '20' }}>
+              <Lock className="h-16 w-16" style={{ color: 'var(--primary)' }} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-slate-100 mb-2">Authentication Required</h2>
-              <p className="text-slate-400 mb-4">Please log in to access this collaboration session.</p>
-              <Button onClick={() => router.push('/auth/login')} className="bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-600/25">
+              <h2 className="text-2xl font-bold mb-2 font-sans" style={{ color: 'var(--foreground)' }}>Authentication Required</h2>
+              <p className="mb-4 font-sans" style={{ color: 'var(--muted-foreground)' }}>Please log in to access this collaboration session.</p>
+              <Button 
+                onClick={() => router.push('/auth/login')} 
+                className="font-sans border-0"
+                style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
+              >
                 Sign In
               </Button>
             </div>
@@ -4033,17 +2680,17 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
 
   if (loading || connecting) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <Card className="p-8 max-w-md mx-4" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
           <div className="text-center space-y-6">
-            <div className="p-4 bg-blue-500/20 rounded-full w-fit mx-auto">
-              <Loader2 className="h-16 w-16 animate-spin text-blue-400" />
+            <div className="p-4 rounded-full w-fit mx-auto" style={{ backgroundColor: 'var(--primary)' + '20' }}>
+              <Loader2 className="h-16 w-16 animate-spin" style={{ color: 'var(--primary)' }} />
             </div>
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-100 mb-2">Joining Session</h2>
-                <p className="text-slate-400">{loading ? 'Loading session data...' : 'Establishing connection...'}</p>
-              </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2 font-sans" style={{ color: 'var(--foreground)' }}>Joining Session</h2>
+              <p className="font-sans" style={{ color: 'var(--muted-foreground)' }}>
+                {loading ? 'Loading session data...' : 'Establishing connection...'}
+              </p>
             </div>
           </div>
         </Card>
@@ -4053,21 +2700,30 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
 
   if (!connected) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <Card className="p-8 max-w-md mx-4" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
           <div className="text-center space-y-6">
-            <div className="p-4 bg-red-500/20 rounded-full w-fit mx-auto">
-              <WifiOff className="h-16 w-16 text-red-400" />
+            <div className="p-4 rounded-full w-fit mx-auto" style={{ backgroundColor: 'var(--destructive)' + '20' }}>
+              <WifiOff className="h-16 w-16" style={{ color: 'var(--destructive)' }} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-red-400 mb-2">Connection Failed</h2>
-              <p className="text-slate-400 mb-6">Unable to connect to the collaboration server.</p>
+              <h2 className="text-2xl font-bold mb-2 font-sans" style={{ color: 'var(--destructive)' }}>Connection Failed</h2>
+              <p className="mb-6 font-sans" style={{ color: 'var(--muted-foreground)' }}>Unable to connect to the collaboration server.</p>
               <div className="flex flex-col sm:flex-row gap-3">
-                <Button onClick={() => window.location.reload()} className="flex-1">
+                <Button 
+                  onClick={() => window.location.reload()} 
+                  className="flex-1 font-sans border-0"
+                  style={{ backgroundColor: 'var(--primary)', color: 'var(--primary-foreground)' }}
+                >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Retry Connection
                 </Button>
-                <Button variant="outline" onClick={() => router.push('/dashboard')} className="flex-1">
+                <Button 
+                  variant="outline" 
+                  onClick={() => router.push('/dashboard')} 
+                  className="flex-1 font-sans"
+                  style={{ borderColor: 'var(--border)', color: 'var(--foreground)' }}
+                >
                   Back to Dashboard
                 </Button>
               </div>
@@ -4080,17 +2736,15 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
 
   if (!sessionJoined || !session) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <Card className="p-8 max-w-md mx-4 bg-slate-900/95 border-slate-800 backdrop-blur-xl">
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+        <Card className="p-8 max-w-md mx-4" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
           <div className="text-center space-y-6">
-            <div className="p-4 bg-emerald-500/20 rounded-full w-fit mx-auto">
-              <Loader2 className="h-16 w-16 animate-spin text-emerald-400" />
+            <div className="p-4 rounded-full w-fit mx-auto" style={{ backgroundColor: 'var(--chart-4)' + '20' }}>
+              <Loader2 className="h-16 w-16 animate-spin" style={{ color: 'var(--chart-4)' }} />
             </div>
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-xl font-bold text-slate-100 mb-2">Joining Session</h2>
-                <p className="text-slate-400">Setting up your collaborative workspace...</p>
-              </div>
+            <div>
+              <h2 className="text-xl font-bold mb-2 font-sans" style={{ color: 'var(--foreground)' }}>Joining Session</h2>
+              <p className="font-sans" style={{ color: 'var(--muted-foreground)' }}>Setting up your collaborative workspace...</p>
             </div>
           </div>
         </Card>
@@ -4099,7 +2753,7 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-950 overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--background)', color: 'var(--foreground)' }}>
       <SessionHeader 
         session={session}
         isHost={isHost}
@@ -4118,265 +2772,118 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
 
       <QuickActionsBar />
 
-      <div className="flex-1 flex overflow-hidden">
-        {layout.chat === 'expanded' && (
-          <>
-            <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${sidebarPanel.width}px` }}>
-              <ChatPanel
-                user={user}
-                messages={messages}
-                newMessage={newMessage}
-                setNewMessage={setNewMessage}
-                chatError={chatError}
-                connected={connected}
-                isSendingMessage={isSendingMessage}
-                sendMessage={sendMessage}
-                handleChatKeyPress={handleChatKeyPress}
-                messagesEndRef={messagesEndRef}
-                getUserColor={getUserColor}
-                onClose={() => togglePanel('chat')}
-              />
-            </div>
-            <div className="w-1 bg-slate-700/50 hover:bg-emerald-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={sidebarPanel.startResize}>
-              <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-emerald-500/10" />
-            </div>
-          </>
-        )}
-
-        {layout.participants === 'expanded' && (
-          <>
-            <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${sidebarPanel.width}px` }}>
-              <ParticipantsPanel
-                user={user}
-                session={session}
-                isHost={isHost}
-                onlineUsers={onlineUsers}
-                participantCount={participantCount}
-                getUserColor={getUserColor}
-                showParticipantMenu={showParticipantMenu}
-                setShowParticipantMenu={setShowParticipantMenu}
-                removeParticipant={removeParticipant}
-                onClose={() => togglePanel('participants')}
-              />
-            </div>
-            <div className="w-1 bg-slate-700/50 hover:bg-blue-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={sidebarPanel.startResize}>
-              <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-blue-500/10" />
-            </div>
-          </>
-        )}
-
-        <div className="flex-1 flex flex-col min-w-0">
-          <FileTabs
-            files={files}
-            activeFileId={activeFileId}
-            setActiveFileId={setActiveFileId}
-            isHost={isHost}
-            showNewFileModal={() => setShowNewFileModal(true)}
-            fileCreationLoading={fileCreationLoading}
-            deleteFile={deleteFile}
-            executeCode={executeCode}
-            isExecuting={isExecuting}
-            activeFile={activeFile}
-          />
-
-          <div className="flex-1 flex overflow-hidden">
-            <div className={cn("flex-1 min-w-0", (layout.preview === 'expanded' || layout.output === 'expanded') && !isMobile && "border-r border-slate-700/50")}>
-              <EditorArea
-                activeFile={activeFile}
-                handleEditorChange={handleEditorChange}
-                handleEditorDidMount={handleEditorDidMount}
-                isHost={isHost}
-                showNewFileModal={() => setShowNewFileModal(true)}
-                fileCreationLoading={fileCreationLoading}
-                showOutput={false}
-                setShowOutput={() => {}}
-                isExecuting={isExecuting}
-                executionResult={executionResult}
-                socket={socket}
-                connected={connected}
-                sessionId={sessionId}
-                user={user}
-                cursors={cursors}
-                setCursors={setCursors}
-                getUserColor={getUserColor}
-                fileLocks={{}}
-                lockRequests={{}}
-              />
-            </div>
-
-            {layout.preview === 'expanded' && (
-              <>
-                <div className="w-1 bg-slate-700/50 hover:bg-purple-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={outputPanel.startResize}>
-                  <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-purple-500/10" />
-                </div>
-                <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${outputPanel.width}px` }}>
-                  <PreviewPanel
-                    isPreviewVisible={true}
-                    setIsPreviewVisible={() => togglePanel('preview')}
-                    generatePreview={generatePreview}
-                    session={session}
-                    activeFile={activeFile}
-                  />
-                </div>
-              </>
-            )}
-
-            {layout.output === 'expanded' && (
-              <>
-                <div className="w-1 bg-slate-700/50 hover:bg-orange-500/50 cursor-col-resize transition-all duration-200 relative group" onMouseDown={outputPanel.startResize}>
-                  <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-orange-500/10" />
-                </div>
-                <div className="flex-shrink-0 transition-all duration-300 ease-out bg-slate-900/95 border-l border-slate-700/50 backdrop-blur-xl" style={{ width: `${outputPanel.width}px` }}>
-                  <div className="h-full flex flex-col">
-                    <div className="px-4 py-3 border-b border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="p-2 bg-orange-500/10 rounded-lg border border-orange-500/20">
-                            <Terminal className="h-4 w-4 text-orange-400" />
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-semibold text-slate-100">Code Output</h3>
-                            <p className="text-xs text-slate-400">{activeFile ? `${activeFile.language} execution` : 'No active file'}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Button size="sm" variant="outline" onClick={executeCode} disabled={isExecuting || !activeFile} className="hover:bg-orange-500/10 hover:text-orange-400 border-slate-700/50 transition-all duration-200" title="Re-run code">
-                            {isExecuting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                          </Button>
-                          
-                          <Button size="sm" variant="ghost" onClick={() => switchMode('focus')} className="hover:bg-red-500/10 hover:text-red-400 transition-all duration-200" title="Close Output">
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex-1 p-4 overflow-auto min-h-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                      {isExecuting ? (
-                        <div className="flex items-center justify-center h-full min-h-[200px]">
-                          <div className="text-center space-y-4">
-                            <div className="p-4 bg-orange-500/10 rounded-full w-fit mx-auto">
-                              <Loader2 className="h-12 w-12 animate-spin text-orange-400" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-slate-100">Executing Code</p>
-                              <p className="text-sm text-slate-400">Running {activeFile?.language} code...</p>
-                            </div>
-                          </div>
-                        </div>
-                      ) : executionResult ? (
-                        <div className="space-y-4">
-                          <div className={cn("px-4 py-3 rounded-xl text-sm border backdrop-blur-sm", executionResult.error ? "bg-red-500/10 text-red-400 border-red-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30")}>
-                            <div className="flex items-center gap-3">
-                              {executionResult.error ? <AlertCircle className="h-5 w-5 flex-shrink-0" /> : <CheckCircle className="h-5 w-5 flex-shrink-0" />}
-                              <div className="flex-1">
-                                <div className="font-semibold">{executionResult.error ? "Execution Failed" : "Execution Successful"}</div>
-                                <div className="text-xs opacity-80 mt-1">Completed in {executionResult.executionTime}ms</div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-3">
-                            <div className="flex items-center justify-between">
-                              <h4 className="text-sm font-semibold text-slate-100 flex items-center gap-2">
-                                <Zap className="h-4 w-4" />
-                                {executionResult.error ? "Error Details:" : "Program Output:"}
-                              </h4>
-                              <Button size="sm" variant="outline" onClick={() => {
-                                const content = executionResult.error || executionResult.output || '';
-                                navigator.clipboard.writeText(content);
-                              }} className="h-7 px-3 text-xs hover:bg-slate-700/50 border-slate-700/50 transition-all duration-200">
-                                <Copy className="h-3 w-3 mr-1" />Copy
-                              </Button>
-                            </div>
-                            
-                            <pre className={cn("text-sm whitespace-pre-wrap font-mono p-4 rounded-xl border overflow-auto max-h-96 backdrop-blur-sm", executionResult.error ? "bg-red-500/5 border-red-500/20 text-red-300" : "bg-slate-800/50 border-slate-700/30 text-slate-200")}>
-                              {executionResult.error || executionResult.output || 'No output generated'}
-                            </pre>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center justify-center h-full min-h-[200px] text-center">
-                          <div className="space-y-6">
-                            <div className="p-6 bg-orange-500/5 rounded-full w-fit mx-auto">
-                              <Terminal className="h-16 w-16 text-orange-400/50" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-slate-100 mb-2 text-lg">Ready to Execute</h3>
-                              <p className="text-sm text-slate-400 mb-6 max-w-xs">Click the "Run Code" button or press Ctrl+E to execute your code</p>
-                              {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
-                                <Button onClick={executeCode} disabled={isExecuting} className="bg-orange-600 hover:bg-orange-700 shadow-lg shadow-orange-600/25">
-                                  <Play className="h-4 w-4 mr-2" />Run Code
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {isMobile && (
-        <div className="fixed bottom-4 right-4 flex flex-col space-y-3 z-40">
-          <Button onClick={() => togglePanel('participants')} className={cn("rounded-full shadow-xl backdrop-blur-xl transition-all duration-300 border-0", layout.participants === 'expanded' ? "bg-blue-600 text-white shadow-blue-600/40" : "bg-slate-800/90 border border-slate-700/50 text-slate-300 hover:bg-slate-700/90")}>
-            <Users className="h-4 w-4 mr-2" />People
-            {participantCount > 1 && (
-              <Badge className="ml-2 bg-emerald-600 text-white text-xs border-0 shadow-lg shadow-emerald-600/25">{participantCount}</Badge>
-            )}
-          </Button>
-
-          <Button onClick={() => togglePanel('chat')} className={cn("rounded-full shadow-xl backdrop-blur-xl transition-all duration-300 border-0", layout.chat === 'expanded' ? "bg-emerald-600 text-white shadow-emerald-600/40" : "bg-slate-800/90 border border-slate-700/50 text-slate-300 hover:bg-slate-700/90")}>
-            <MessageSquare className="h-4 w-4 mr-2" />Chat
-            {messages.length > 0 && layout.chat !== 'expanded' && (
-              <Badge className="ml-2 bg-emerald-600 text-white text-xs border-0 shadow-lg shadow-emerald-600/25">{messages.length}</Badge>
-            )}
-          </Button>
-          
-          {activeFile && languageConfigs[activeFile.language as keyof typeof languageConfigs]?.executable && (
-            <Button onClick={executeCode} disabled={isExecuting} className="rounded-full bg-orange-600 hover:bg-orange-700 shadow-xl shadow-orange-600/40 backdrop-blur-xl border-0">
-              {isExecuting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}Run
-            </Button>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Main Content Area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Sidebar */}
+          {layout.sidebar !== 'hidden' && (
+            <>
+              <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${sidebarPanel.width}px` }}>
+                <Sidebar
+                  mode={layout.sidebar}
+                  user={user}
+                  session={session}
+                  isHost={isHost}
+                  onlineUsers={onlineUsers}
+                  participantCount={participantCount}
+                  getUserColor={getUserColor}
+                  showParticipantMenu={showParticipantMenu}
+                  setShowParticipantMenu={setShowParticipantMenu}
+                  removeParticipant={removeParticipant}
+                  messages={messages}
+                  newMessage={newMessage}
+                  setNewMessage={setNewMessage}
+                  chatError={chatError}
+                  connected={connected}
+                  isSendingMessage={isSendingMessage}
+                  sendMessage={sendMessage}
+                  handleChatKeyPress={handleChatKeyPress}
+                  messagesEndRef={messagesEndRef}
+                  isMobile={isMobile}
+                  onInviteUsers={() => setShowInviteModal(true)}
+                  onClose={() => setSidebarMode('hidden')}
+                  className="h-full"
+                  style={{ backgroundColor: 'var(--sidebar)', borderColor: 'var(--sidebar-border)' }}
+                />
+              </div>
+              <div 
+                className="w-1 cursor-col-resize transition-all duration-200 relative group" 
+                style={{ backgroundColor: 'var(--border)' }}
+                onMouseDown={sidebarPanel.startResize}
+              >
+                <div className="absolute inset-y-0 -inset-x-2 group-hover:bg-[var(--accent)]" />
+              </div>
+            </>
           )}
-        </div>
-      )}
 
-      <div className="bg-slate-900/95 border-t border-slate-700/50 px-4 py-2 flex items-center justify-between text-xs text-slate-400 backdrop-blur-xl">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className="text-xs border-slate-700/50 bg-slate-800/50">
-              {activeFile ? languageConfigs[activeFile.language as keyof typeof languageConfigs]?.name || activeFile.language : 'No file'}
-            </Badge>
-            {activeFile && <span className="text-slate-500">{activeFile.content.split('\n').length} lines</span>}
+          <div className="flex-1 flex flex-col min-w-0">
+            <FileTabs
+              files={files}
+              activeFileId={activeFileId}
+              setActiveFileId={setActiveFileId}
+              isHost={isHost}
+              showNewFileModal={() => setShowNewFileModal(true)}
+              fileCreationLoading={fileCreationLoading}
+              deleteFile={deleteFile}
+              executeCode={handleExecuteCode}
+              isExecuting={isExecuting}
+              activeFile={activeFile}
+            />
+
+            <div className="flex-1 flex overflow-hidden">
+              <div className={cn("flex-1 min-w-0", layout.preview === 'expanded' && !isMobile && "border-r")} style={{ borderColor: 'var(--border)' }}>
+                <EditorArea
+                  activeFile={activeFile}
+                  handleEditorChange={handleEditorChange}
+                  handleEditorDidMount={handleEditorDidMount}
+                  isHost={isHost}
+                  showNewFileModal={() => setShowNewFileModal(true)}
+                  fileCreationLoading={fileCreationLoading}
+                  showOutput={false}
+                  setShowOutput={() => {}}
+                  isExecuting={isExecuting}
+                  executionResult={executionResult}
+                  socket={socket}
+                  connected={connected}
+                  sessionId={sessionId}
+                  user={user}
+                  cursors={cursors}
+                  setCursors={setCursors}
+                  getUserColor={getUserColor}
+                  fileLocks={{}}
+                  lockRequests={{}}
+                />
+              </div>
+
+              {/* Preview Panel */}
+              {layout.preview === 'expanded' && (
+                <>
+                  <div 
+                    className="w-1 cursor-col-resize transition-all duration-200" 
+                    style={{ backgroundColor: 'var(--border)' }}
+                    onMouseDown={outputPanel.startResize} 
+                  />
+                  <div className="flex-shrink-0 transition-all duration-300 ease-out" style={{ width: `${outputPanel.width}px` }}>
+                    <PreviewPanel
+                      isPreviewVisible={true}
+                      setIsPreviewVisible={() => togglePanel('preview')}
+                      generatePreview={generatePreview}
+                      session={session}
+                      activeFile={activeFile}
+                      files={files}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <div className={cn("w-2 h-2 rounded-full", connected ? "bg-emerald-400 shadow-lg shadow-emerald-400/50" : "bg-red-400")} />
-            <span>{participantCount} online</span>
-          </div>
-          
-          <div className="flex items-center space-x-1">
-            <FileText className="h-3 w-3" />
-            <span>{files.length} files</span>
-          </div>
-
-          <Badge className={cn("text-xs border-0 shadow-sm", syncStatus === 'synced' && "bg-emerald-500/10 text-emerald-400", syncStatus === 'syncing' && "bg-blue-500/10 text-blue-400", syncStatus === 'error' && "bg-red-500/10 text-red-400", syncStatus === 'offline' && "bg-slate-700 text-slate-400")}>
-            {syncStatus === 'syncing' && <RefreshCw className="h-2.5 w-2.5 mr-1 animate-spin" />}
-            {syncStatus === 'synced' && <CheckCircle className="h-2.5 w-2.5 mr-1" />}
-            {syncStatus === 'error' && <AlertCircle className="h-2.5 w-2.5 mr-1" />}
-            {syncStatus === 'offline' && <WifiOff className="h-2.5 w-2.5 mr-1" />}
-            {syncStatus}
-          </Badge>
-        </div>
+        {/* Bottom Terminal Output Panel - VSCode Style with CSS Variables */}
+        {layout.output === 'expanded' && <TerminalOutput />}
       </div>
 
+      {/* Keep all your existing modals */}
       {showNewFileModal && (
         <NewFileModal
           newFileName={newFileName}
@@ -4384,7 +2891,7 @@ ${currentFiles.map(f => `- ${f.name} (${f.language})`).join('\n')}
           newFileLanguage={newFileLanguage}
           setNewFileLanguage={setNewFileLanguage}
           fileCreationLoading={fileCreationLoading}
-          createNewFile={createNewFile}
+          createNewFile={handleCreateFile}
           files={files}
           closeModal={() => setShowNewFileModal(false)}
         />

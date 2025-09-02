@@ -20,11 +20,53 @@ enum ParticipantRole {
   COLLABORATOR
 }
 
+// OAuth-related models for NextAuth.js
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model NextAuthSession {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("nextauth_sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Your existing User model with OAuth fields added
 model User {
   id                    String   @id @default(cuid())
   email                 String   @unique
-  password              String
+  password              String?  // Made optional for OAuth users
   displayName           String
+  image                 String?  // For OAuth profile pictures
   isVerified            Boolean  @default(false)
   verificationToken     String?
   resetToken            String?
@@ -34,13 +76,19 @@ model User {
   lastLogin             DateTime?
   loginAttempts         Int      @default(0)
   lockedUntil           DateTime?
-
+  emailVerified         DateTime? // For NextAuth compatibility
+  
   // Relations
   ownedSessions         Session[]
   participations        SessionParticipant[]
   messages              Message[]
   sessionFiles          SessionFile[]
-  fileLocks            FileLock[]
+  fileLocks             FileLock[]
+  
+  // OAuth relations
+  accounts              Account[]
+  nextAuthSessions      NextAuthSession[]
+
   @@map("users")
 }
 
@@ -56,7 +104,7 @@ model Session {
   updatedAt   DateTime    @updatedAt
   expiresAt   DateTime?
   lastActivity DateTime   @default(now())
-
+  
   // Relations
   ownerId      String
   owner        User                  @relation(fields: [ownerId], references: [id], onDelete: Cascade)
@@ -72,7 +120,7 @@ model SessionParticipant {
   role      ParticipantRole   @default(COLLABORATOR)
   joinedAt  DateTime          @default(now())
   isActive  Boolean           @default(true)
-
+  
   // Relations
   userId    String
   sessionId String
@@ -91,13 +139,14 @@ model SessionFile {
   size      Int      @default(0)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
+  
   // Relations
   sessionId String
   createdBy String
   session   Session @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   creator   User    @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   lock      FileLock?
+
   @@unique([sessionId, name])
   @@map("session_files")
 }
@@ -106,7 +155,7 @@ model Message {
   id        String   @id @default(cuid())
   content   String
   createdAt DateTime @default(now())
-
+  
   // Relations
   userId    String
   sessionId String
@@ -126,6 +175,6 @@ model FileLock {
   // Relations
   file      SessionFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
   user      User        @relation(fields: [lockedBy], references: [id], onDelete: Cascade)
-  
+
   @@map("file_locks")
 }

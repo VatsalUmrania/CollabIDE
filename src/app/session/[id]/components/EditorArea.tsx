@@ -708,7 +708,7 @@ export default function EditorArea({
                     <Play className={cn("text-muted-foreground", isMobileView ? "h-8 w-8" : "h-12 w-12")} />
                   </div>
                   <CardDescription className={isMobileView ? "text-sm" : "text-base"}>
-                    Click "Run Code" to execute
+                    Click &quot;Run Code&quot; to execute
                   </CardDescription>
                 </div>
               </div>
