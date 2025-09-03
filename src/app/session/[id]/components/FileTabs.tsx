@@ -6,7 +6,6 @@ import {
   Play,
   Loader2,
   X,
-  FileCode,
   FileText,
   MoreHorizontal,
   Dot
@@ -25,7 +24,7 @@ import { languageConfigs } from '../utils/languageConfigs'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
-// Official language icons using SVG - enhanced version
+// Official language icons using SVG - enhanced version with globals.css support
 const LanguageIcon = ({ language, className = "" }: { language: string; className?: string }) => {
   const iconProps = {
     className: cn("w-4 h-4", className),
@@ -81,7 +80,7 @@ const LanguageIcon = ({ language, className = "" }: { language: string; classNam
       )
     case 'json':
       return (
-        <div className={cn("w-4 h-4 rounded-sm bg-amber-500 flex items-center justify-center text-white text-[8px] font-bold", className)}>
+        <div className={cn("w-4 h-4 rounded-sm bg-chart-5 flex items-center justify-center text-white text-[8px] font-bold", className)}>
           { }
         </div>
       )
@@ -156,17 +155,17 @@ export default function FileTabs({
     }
   }
 
-  // Empty state with better styling
+  // Empty state with globals.css colors
   if (files.length === 0) {
     return (
-      <div className="h-10 border-b border-border bg-[#252526] flex items-center justify-center">
+      <div className="h-10 border-b border-border bg-sidebar flex items-center justify-center">
         {isHost ? (
           <Button 
             size="sm" 
             variant="ghost"
             onClick={showNewFileModal} 
             disabled={fileCreationLoading}
-            className="h-8 text-xs text-[#cccccc] hover:bg-[#37373d] hover:text-white transition-colors"
+            className="h-8 text-xs text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
           >
             {fileCreationLoading ? (
               <>
@@ -181,15 +180,15 @@ export default function FileTabs({
             )}
           </Button>
         ) : (
-          <div className="text-xs text-[#858585]">No files open</div>
+          <div className="text-xs text-muted-foreground">No files open</div>
         )}
       </div>
     )
   }
 
-  // Modern, clean tab design
+  // Modern, clean tab design using globals.css colors
   return (
-    <div className="h-10 border-b border-border bg-[#252526] flex items-center">
+    <div className="h-10 border-b border-sidebar-border bg-sidebar flex items-center">
       {/* File tabs area */}
       <ScrollArea className="flex-1 whitespace-nowrap">
         <div className="flex h-10 items-center">
@@ -214,15 +213,15 @@ export default function FileTabs({
                     className={cn(
                       "group relative flex items-center px-3 h-full text-xs font-normal min-w-0 max-w-[200px]",
                       "transition-all duration-150 ease-in-out",
-                      "border-r border-[#37373d] last:border-r-0",
+                      "border-r border-sidebar-border last:border-r-0",
                       isActive 
-                        ? "bg-[#1e1e1e] text-white shadow-sm" 
-                        : "bg-transparent text-[#cccccc] hover:bg-[#2d2d30] hover:text-white"
+                        ? "bg-background text-foreground shadow-sm" 
+                        : "bg-transparent text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     )}
                   >
-                    {/* Active indicator */}
+                    {/* Active indicator using primary color */}
                     {isActive && (
-                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#007acc]" />
+                      <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />
                     )}
                     
                     {/* Language icon */}
@@ -239,7 +238,7 @@ export default function FileTabs({
                     <div className="ml-1 flex-shrink-0">
                       <Dot className={cn(
                         "w-3 h-3 transition-opacity",
-                        false ? "opacity-100 text-white" : "opacity-0" // Add unsaved logic here
+                        false ? "opacity-100 text-foreground" : "opacity-0" // Add unsaved logic here
                       )} />
                     </div>
                     
@@ -251,7 +250,7 @@ export default function FileTabs({
                           "ml-1 w-5 h-5 flex items-center justify-center rounded transition-all",
                           "opacity-0 group-hover:opacity-100",
                           isActive && "opacity-60 hover:opacity-100",
-                          "hover:bg-[#5a5d5e] hover:text-white"
+                          "hover:bg-muted hover:text-foreground"
                         )}
                         title="Close file"
                       >
@@ -277,15 +276,15 @@ export default function FileTabs({
       </ScrollArea>
 
       {/* Right side actions */}
-      <div className="flex items-center border-l border-[#37373d] pl-2 pr-2">
+      <div className="flex items-center border-l border-sidebar-border pl-2 pr-2">
         {/* Session status */}
         {sessionInfo && (
-          <div className="flex items-center px-2 text-xs text-[#cccccc] space-x-1">
+          <div className="flex items-center px-2 text-xs text-sidebar-foreground space-x-1">
             <div className={cn(
               "w-2 h-2 rounded-full transition-colors",
-              sessionInfo.isConnected ? "bg-emerald-500" : "bg-red-500"
+              sessionInfo.isConnected ? "bg-chart-2" : "bg-destructive"
             )} />
-            <span className="text-[10px] text-[#858585]">
+            <span className="text-[10px] text-muted-foreground">
               {sessionInfo.participantCount || 0} online
             </span>
           </div>
@@ -300,7 +299,7 @@ export default function FileTabs({
                 variant="ghost"
                 onClick={showNewFileModal}
                 disabled={fileCreationLoading}
-                className="h-7 w-7 p-0 hover:bg-[#37373d] text-[#cccccc] hover:text-white transition-colors"
+                className="h-7 w-7 p-0 hover:bg-sidebar-accent text-sidebar-foreground hover:text-sidebar-accent-foreground transition-colors"
               >
                 {fileCreationLoading ? (
                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -328,10 +327,10 @@ export default function FileTabs({
                 onClick={executeCode}
                 disabled={isExecuting}
                 className={cn(
-                  "h-7 px-2 hover:bg-[#37373d] transition-colors ml-1",
+                  "h-7 px-2 hover:bg-sidebar-accent transition-colors ml-1",
                   isExecuting 
-                    ? "text-blue-400 bg-blue-500/10" 
-                    : "text-[#cccccc] hover:text-white hover:bg-emerald-600/20"
+                    ? "text-chart-1 bg-chart-1/10" 
+                    : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-chart-2/20"
                 )}
               >
                 {isExecuting ? (
@@ -354,37 +353,6 @@ export default function FileTabs({
               </div>
             </TooltipContent>
           </Tooltip>
-        )}
-
-        {/* File actions menu */}
-        {files.length > 0 && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-7 w-7 p-0 hover:bg-[#37373d] text-[#cccccc] hover:text-white transition-colors ml-1"
-              >
-                <MoreHorizontal className="h-3 w-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem onClick={showNewFileModal} disabled={!isHost}>
-                <Plus className="h-4 w-4 mr-2" />
-                New File
-              </DropdownMenuItem>
-              {canExecute && (
-                <DropdownMenuItem onClick={executeCode} disabled={isExecuting}>
-                  <Play className="h-4 w-4 mr-2" />
-                  Run File
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-xs text-muted-foreground">
-                {files.length} file{files.length !== 1 ? 's' : ''} open
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         )}
       </div>
     </div>
