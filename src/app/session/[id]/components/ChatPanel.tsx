@@ -98,7 +98,7 @@ export default function ChatPanel({
       <div className="flex-shrink-0 bg-[#2d2d30] border-b border-[#333]">
         <div className="flex items-center justify-between px-3 h-10">
           <div className="flex items-center space-x-2">
-            
+            sa
               <MessageSquare className="h-3 w-3 text-white" />
             
             <div className="flex flex-col">

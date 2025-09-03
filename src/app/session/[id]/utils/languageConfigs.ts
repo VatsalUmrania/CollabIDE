@@ -9,7 +9,7 @@ export const languageConfigs = {
     python: {
       name: 'Python',
       extension: 'py',
-      icon: '🐍',
+      icon: '',
       executable: true,
       defaultContent: `# Python Code...`
     },

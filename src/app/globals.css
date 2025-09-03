@@ -119,6 +119,32 @@
   body {
     @apply bg-background text-foreground;
   }
-  
+}
+
+/* Monaco Editor Cursor Fixes */
+.monaco-editor .lines-content div[id^="cursor-wrapper"] {
+  z-index: 2147483647 !important;
+}
+
+.monaco-editor .lines-content div[id^="cursor-wrapper"] * {
+  z-index: 2147483647 !important;
+}
+
+.monaco-editor .view-overlays {
+  z-index: 10 !important;
+}
+
+.monaco-editor .cursors-layer {
+  z-index: 15 !important;
+}
+
+/* Ensure collaborative cursors are above everything */
+div[id^="cursor-wrapper"] {
+  z-index: 2147483647 !important;
+  position: absolute !important;
+}
+
+div[id^="cursor-wrapper"] > * {
+  z-index: 2147483647 !important;
 }
 
