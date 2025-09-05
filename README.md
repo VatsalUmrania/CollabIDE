@@ -1,170 +1,122 @@
-# 🚀 CollabIDE - Real-Time Collaborative Code Editor
+<div align="center">
+  <h1 align="center">CollabIDE</h1>
+  <p align="center">
+    A real-time, multi-user collaborative code editor built for seamless pair programming and remote teamwork.
+  </p>
+  <p align="center">
+   
+  </p>
+</div>
 
 <div align="center">
-  
-![Next.js](https://img.shields.io/badge/Next.js-15.4.1-black?style=for-the-badge&logo=next.js)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.6.0-blue?style=for-the-badge&logo=typescript)
-![Socket.io](https://img.shields.io/badge/Socket.io-4.7.0-white?style=for-the-badge&logo=socket.io&logoColor=black)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.0-38B2AC?style=for-the-badge&logo=tailwind-css)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
 
-<br/>
-
-🔗 [Live Demo](https://collabide.vercel.app/) • 📚 [Documentation](https://docs.collabide.dev/) • 🐛 [Issues](https://github.com/yourusername/collabide/issues) • 💬 [Discussions](https://github.com/yourusername/collabide/discussions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14.x-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![Socket.IO](https://img.shields.io/badge/Socket.IO-4.x-black?style=flat-square&logo=socket.io)](https://socket.io/)
+[![Deployment](https://img.shields.io/badge/Deployment-Vercel-black?style=flat-square&logo=vercel)](https://vercel.com)
 
 </div>
 
----
+<br/>
 
-## 🎯 Overview
+<p align="center">
+  <img width="1919" height="932" alt="image" src="https://github.com/user-attachments/assets/c074b108-ac56-4c32-b9f1-e182000e3019" alt="The CollabIDE real-time editor showcasing its dark theme, with a live cursor from another user in the code, and a terminal panel displaying successful code execution." />
 
-**CollabIDE** is a modern, real-time collaborative coding environment built with powerful web technologies. It offers a seamless, VS Code-like experience in the browser with live synchronization, multi-language support, and interactive collaboration tools.
+</p>
 
-### Perfect for:
-- 👨‍🎓 Students working on group projects  
-- 👩‍💻 Developers doing pair programming  
-- 🏫 Educators conducting live coding sessions  
-- 🚀 Remote teams collaborating in real-time  
+## 🌟 Why CollabIDE?
 
----
+As a developer, I've always been fascinated by real-time applications. I wanted to build a project that would challenge me to go beyond typical CRUD apps and dive deep into **WebSockets**, **complex state management**, and **modern authentication patterns**. CollabIDE is the result—a tool built from the ground up to practice and showcase these advanced skills in a practical, real-world application.
 
-## ✨ Features
+## 🎯 Key Features
 
-| Feature | Description | Status |
-|--------|-------------|--------|
-| 🔄 Real-time Sync | Live collaborative editing with conflict resolution | ✅ Active |
-| 👥 Multi-user Sessions | Public/private collaborative coding sessions | ✅ Active |
-| 💬 Integrated Chat | Built-in team communication | ✅ Active |
-| 🎨 Monaco Editor | Browser-based VS Code experience | ✅ Active |
-| 🔐 Secure Auth | JWT-based authentication with email verification | ✅ Active |
-| 📝 Multi-language Support | C++, Python, JavaScript, HTML, CSS | ✅ Active |
-| 👁️ Live Cursors | Real-time cursor tracking and selections | ✅ Active |
-| 🏗️ Session Management | Easily create, join, manage sessions | ✅ Active |
-| 💾 Auto-save | Automatic session state saving | ✅ Active |
-| 📱 Responsive UI | Fully optimized for desktop, tablet, and mobile | ✅ Active |
+-   **⚡ Real-time Collaboration:** Instant synchronization of code, cursors, and selections across all participants using Socket.IO.
+-   **👨‍💻 Multi-User Editor:** Powered by **Monaco Editor** (the engine behind VS Code) for a familiar, feature-rich coding experience.
+-   **💬 Integrated Chat:** A dedicated chat panel for seamless communication without leaving the coding environment.
+-   **🔐 Dual Authentication:** Secure and flexible user auth with two distinct flows:
+    -   **Custom JWT:** For traditional email and password sign-ins.
+    -   **OAuth 2.0:** For one-click login with Google & GitHub via NextAuth.js.
+-   **🖥️ Code Execution:** Run code snippets directly in the app and view the output in a built-in terminal.
+-   **📂 File & Session Management:** A full-featured dashboard to create, manage, and join public or private coding sessions.
+-   **🌐 Live Preview:** Instantly render a live preview for web development files (HTML, CSS, JS).
+-   **🎁 Export to Zip:** Download the entire session's files, including a README, as a zip archive.
 
----
+## 🛠️ Tech Stack & Architecture
 
-## 🛠️ Tech Stack
+This project uses a modern, monolithic architecture with a clear separation between the frontend, backend API, and real-time server components.
 
-### Frontend
-- **Next.js 15.4.1** — React framework with App Router
-- **TypeScript 5.6.0** — Static typing
-- **Tailwind CSS 3.4.0** — Utility-first CSS framework
-- **Monaco Editor 4.5.0** — Code editor engine from VS Code
-- **Socket.io Client 4.7.0** — WebSocket communication
-- **Framer Motion 11.0.0** — Animation and transitions
-- **React Hook Form** — Modern form handling
-- **Zustand** — Lightweight state management
+| Area          | Technologies                                                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend** | **Next.js 14** (App Router), **React**, **TypeScript**, **Tailwind CSS**, **shadcn/ui** |
+| **Backend** | **Next.js API Routes**, **Node.js** |
+| **Real-time** | **Socket.IO** (integrated with a custom Node.js server)                                                                            |
+| **Database** | **PostgreSQL** with **Prisma ORM** for type-safe database access.                                                                  |
+| **Auth** | **NextAuth.js**, **JWT**, **bcrypt.js** |
+| **Deployment**| **Vercel** |
 
-### Backend
-- **Next.js API Routes** — Serverless functions
-- **Prisma 6.0.0** — Type-safe database ORM
-- **PostgreSQL** — Relational database
-- **Socket.io Server** — Real-time WebSocket support
-- **JWT Authentication** — Token-based security
-- **bcryptjs 2.4.3** — Password hashing
-- **Nodemailer 6.9.0** — Email sending
-- **Zod 3.22.0** — Schema validation
+## 💡 Challenges & Learnings
 
-### Dev & Testing
-- **Jest** — Unit testing
-- **Cypress** — E2E testing
-- **ESLint** — Code linting
-- **Prettier** — Code formatting
-- **Husky** — Git hooks
+Building CollabIDE was a fantastic learning experience. Here are some of the key challenges I tackled:
 
----
+1.  **Real-time State Synchronization:** The biggest challenge was ensuring a seamless, low-latency experience. Synchronizing code, cursor positions, and participant statuses across multiple clients without conflicts required careful state management on both the server and client, using techniques like **debouncing events**, **using refs to prevent re-renders**, and designing a robust Socket.IO event architecture.
 
-## ⚡ Quick Start
+2.  **Monaco Editor Integration:** Integrating Monaco (which has an imperative API) into React's declarative world was complex. I learned how to manage its lifecycle, create custom themes, and carefully handle remote vs. local changes to prevent infinite update loops and maintain a single source of truth for file content.
 
-### Prerequisites
-- Node.js ≥ 18
-- PostgreSQL ≥ 12
-- Mailtrap or SMTP credentials (for dev emails)
+3.  **Unified Authentication:** Engineering a system that gracefully handles both my custom JWT flow and NextAuth.js OAuth providers was a deep dive into modern auth patterns. I built a custom API endpoint to exchange a NextAuth session for an application-specific JWT, creating a unified authentication context for the entire application, including the WebSocket server.
 
----
+## 🏃‍♀️ Getting Started
 
-### 🔧 Installation
+To get a local copy up and running, follow these steps.
 
-```bash
-# 1. Clone the Repository
-git clone https://github.com/vatsalumrania/collabide.git
-cd collabide
+### **Prerequisites**
 
-# 2. Install Dependencies
-npm install
-```
+-   Node.js (v18.x or later)
+-   npm or yarn
+-   A running PostgreSQL database instance
 
+### **Local Setup**
 
-⚙️ Environment Setup
-Create a .env file in the root directory and add the following:
-```bash
-# Database
-DATABASE_URL="postgresql://username:password@localhost:5432/collabide"
+1.  **Clone the Repository**
+    ```sh
+    git clone https://github.com/VatsalUmrania/collabide.git
+    cd collabide
+    ```
 
-# Authentication
-JWT_SECRET="your-super-secret-jwt-key-minimum-32-characters"
-JWT_REFRESH_SECRET="your-refresh-token-secret"
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-nextauth-secret"
+2.  **Install Dependencies**
+    ```sh
+    npm install
+    ```
 
-# Email (Mailtrap Example)
-SMTP_HOST="sandbox.smtp.mailtrap.io"
-SMTP_PORT=2525
-SMTP_USER="your-mailtrap-username"
-SMTP_PASS="your-mailtrap-password"
-FROM_EMAIL="noreply@noreply.com"
-```
+3.  **Set Up Environment Variables**
+    Create a `.env` file in the root directory by copying the example:
+    ```sh
+    cp .env.example .env
+    ```
+    Now, open `.env` and fill in the required values (see the table in the previous response for details).
 
-🗃️ Database Setup
-```bash
-# Generate Prisma client
-npx prisma generate
+4.  **Sync the Database**
+    This command uses Prisma to sync your schema with your PostgreSQL database.
+    ```sh
+    npx prisma db push
+    ```
 
-# Run migrations
-npx prisma migrate dev --name init
+5.  **Run the Development Server**
+    ```sh
+    npm run dev
+    ```
+    The application will be live at `http://localhost:3000`.
 
-# (Optional) Seed the database
-npm run db:seed
-```
-▶️ Run Development Server
-```bash
-npm run dev
-# or
-yarn dev
-```
-Visit: http://localhost:3000
+## 🚀 Future Roadmap
 
+This project has a lot of potential for expansion. Here are some features I'm considering for the future:
 
-🎮 Usage Example
----
-Start a New Collaborative Session
-Login/Register
+-   [ ] **Containerized Code Execution:** Move the code execution feature into isolated Docker containers for enhanced security and resource management.
+-   [ ] **Unit & E2E Testing:** Implement a comprehensive testing suite with Jest, React Testing Library, and Playwright.
+-   [ ] **Editor Themes:** Allow users to select from a variety of editor themes and persist their preferences.
+-   [ ] **Git Integration:** Add basic Git functionality to clone a repository into a session.
+-   [ ] **Terminal Integration:** Implement a fully interactive terminal within the session.
 
-Create or join a coding room
+## License
 
-Start editing and invite others via session link
-
-See real-time cursor movements, code updates, and chat messages
-
-🐛 Known Issues
-⚠️ Socket connection may lag on slow networks
-
-📁 Optimization needed for large file handling
-
-📱 Cursor sync improvements on mobile screens
-
-
-🙌 Acknowledgements
----
-🖊️ Monaco Editor — The core of the editor experience
-
-🔌 Socket.io — Real-time collaboration magic
-
-⚛️ Next.js — Robust full-stack framework
-
-
-💖 All contributors and open-source communities
----
+This project is open-source and distributed under the **MIT License**. See the `LICENSE` file for more information.
